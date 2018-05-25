@@ -1,0 +1,66 @@
+
+---
+- name: Node Base Services
+  hosts: all
+  become: true
+  gather_facts: false
+
+  pre_tasks:
+  - name: Install python2 for Ansible
+    raw: bash -c "test -e /usr/bin/pip || (apt -qqy update && apt install -qqy python python-pip)"
+    register: output
+    changed_when: output.stdout != ""
+
+  - name: Install more Ansible dependencies
+    pip: name=pyopenssl
+
+  - name: Gathering facts
+    setup:
+
+  tasks:
+  - name: Install software utils
+    apt:
+      name: iputils-ping,dnsutils,nano,jq
+
+  - name: Generate SSH Private Key
+    openssl_privatekey:
+      path: "/home/{{ sshUser }}/.ssh/id_rsa"
+
+  - name: Generate SSH Public Key
+    openssl_publickey:
+      path: "/home/{{ sshUser }}/.ssh/id_rsa.pub"
+      privatekey_path: "/home/{{ sshUser }}/.ssh/id_rsa"
+      format: OpenSSH
+
+  - name: Set SSH Key Permissions
+    with_items: ["/home/{{ sshUser }}/.ssh/id_rsa", "/home/{{ sshUser }}/.ssh/id_rsa.pub"]
+    file:
+      path: "/home/{{ sshUser }}/.ssh/id_rsa"
+      owner: "{{ sshUser }}"
+      group: "{{ sshUser }}"
+
+  - shell: cat /home/{{ sshUser }}/.ssh/id_rsa.pub
+    register: public_key_openssh
+    changed_when: false
+
+  - set_fact: public_key_openssh={{ public_key_openssh.stdout }}
+
+  - name: Register Bastion Host Public Key on rancherOS node
+    raw: |
+      printf "ssh_authorized_keys:\n$(ros config get ssh_authorized_keys)" >> keys.yml
+      if grep -q "{{ hostvars[item].public_key_openssh }}" keys.yml
+      then
+          sed -i "s/^$2.*$/$3/" $1
+          echo "- {{ hostvars[item].public_key_openssh }} {{ hostvars[item].sshUser }}@{{ item }}" >> keys.yml
+          ros config merge -i keys.yml
+          rm keys.yml
+      fi
+    with_items: "{{ groups['bastion'] }}"
+    register: output
+    changed_when: output.stdout != ""
+
+  - name: Add Bastion Host Public Key to RancherOS console
+    authorized_key:
+      user: "{{ sshUser }}"
+      key: "{{ hostvars[item].public_key_openssh }} {{ hostvars[item].sshUser }}@{{ item }}"
+    with_items: "{{ groups['bastion'] }}"

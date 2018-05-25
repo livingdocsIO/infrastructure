@@ -1,0 +1,18 @@
+http.port: 9200
+http.publish_port: 9200
+http.bind_host: 0.0.0.0
+http.publish_host: {{ ansible_default_ipv4.address }}
+
+transport.tcp.port: 9300
+transport.publish_port: 9300
+transport.bind_host: 0.0.0.0
+transport.publish_host: {{ ansible_default_ipv4.address }}
+
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+node.name: ${HOSTNAME}
+cluster.name: main
+
+discovery.zen.minimum_master_nodes: {{ elasticsearch_minimum_master_nodes }}
+discovery.zen.ping.unicast.hosts: {{ elasticsearch_hosts }}

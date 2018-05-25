@@ -1,0 +1,50 @@
+#cloud-config
+rancher:
+  console: ubuntu
+
+  sysctl:
+    vm.swappiness: 1
+    vm.max_map_count: 262144
+    fs.file-max: 1000000000
+    net.core.somaxconn: 65535
+    net.ipv4.tcp_max_syn_backlog: 4096
+    net.ipv4.tcp_keepalive_time: 60
+    net.ipv4.tcp_keepalive_probes: 6
+    net.ipv4.tcp_keepalive_intvl: 10
+
+  system_docker:
+    log_driver: json-file
+    log_opts:
+      max-size: '50m'
+      max-file: '3'
+
+  docker:
+    log_driver: json-file
+    log_opts:
+      max-size: '10m'
+      max-file: '3'
+
+  services:
+    user-volumes:
+      volumes:
+        - /home:/home
+        - /opt:/opt
+        - /var/lib/docker:/var/lib/docker
+        - /var/lib/rancher:/var/lib/rancher
+        - /var/lib/kubelet:/var/lib/kubelet
+        - /etc/kubernetes:/etc/kubernetes
+
+    digitalocean-agent:
+      image: marcbachmann/digitalocean-agent:0.5.1
+      restart: always
+      net: host
+      volumes: ['/proc:/agent/proc:ro']
+      labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']
+
+    node-exporter:
+      image: prom/node-exporter
+      restart: always
+      net: host
+      command: --path.procfs /host/proc --path.sysfs /host/sys --collector.filesystem.ignored-mount-points '^/(rootfs\/)?(sys|proc|dev|host|etc|var|run)($$$|/)'
+      volumes: ['/proc:/host/proc:ro', '/sys:/host/sys:ro', '/:/rootfs:ro,rslave']
+      labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']

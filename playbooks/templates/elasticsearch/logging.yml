@@ -1,0 +1,8 @@
+# Root logger option, use INFO or ERROR
+rootLogger=INFO, stdout
+
+# Direct log messages to stdout
+appender.stdout=org.apache.log4j.ConsoleAppender
+appender.stdout.Target=System.out
+appender.stdout.layout=org.apache.log4j.PatternLayout
+appender.stdout.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n

@@ -1,0 +1,7 @@
+.ssh
+.terraform
+terraform.tfvars
+terraform.tfstate.d
+ansible.log
+*.retry
+*.pyc

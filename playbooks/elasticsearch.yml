@@ -1,0 +1,74 @@
+---
+- name: Elasticsearch
+  hosts: elasticsearch
+  become: true
+  gather_facts: true
+
+  vars:
+    elasticsearch_minimum_master_nodes: 2
+    elasticsearch_number_of_replicas: 0
+
+  tasks:
+  - name: Create Elasticsearch directory
+    file: path=/etc/elasticsearch state=directory
+
+  - set_fact:
+      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+
+  - name: Generate elasticsearch.yml
+    template:
+      src: templates/elasticsearch/elasticsearch.yml
+      dest: '/etc/elasticsearch/elasticsearch.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Generate logging.yml
+    template:
+      src: templates/elasticsearch/logging.yml
+      dest: '/etc/elasticsearch/logging.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Generate docker-compose.yml
+    template:
+      src: templates/elasticsearch/docker-compose.yml
+      dest: '/var/lib/rancher/conf/elasticsearch.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Deploy elasticsearch on server
+    raw: ros service enable /var/lib/rancher/conf/elasticsearch.yml
+
+  - name: Start elasticsearch on server
+    raw: ros service up elasticsearch
+
+  - name: Start elasticsearch-exporter on server
+    raw: ros service up elasticsearch-exporter
+
+  - name: Start kibana on server
+    raw: ros service up kibana
+
+  - name: Start elasticsearch-hq on server
+    raw: ros service up elasticsearch-hq
+
+  - name: Started... waiting for Cluster Health "green"
+    action: shell warn=False curl -u elastic:{{ elasticsearch_initial_password }} -s -m 2 localhost:9200/_cluster/health?wait_for_status=green
+    register: clusterstate
+    until: clusterstate.stdout.find("green") != -1
+    retries: 40
+    delay: 5
+    tags: [healthcheck]
+
+  - name: Echo docker container status
+    shell: '{% raw %}docker ps -a --format "{{.ID}}: {{.Names}} - {{.Status}}"{% endraw %}'
+    register: dockerstate
+    tags: [healthcheck]
+
+  - debug: msg="{{ clusterstate.stdout }}"
+    tags: [healthcheck]
+
+  - debug: msg="{{ dockerstate.stdout }}"
+    tags: [healthcheck]

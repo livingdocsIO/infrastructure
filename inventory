@@ -1,0 +1,165 @@
+#!/usr/bin/env node
+const fs = require('fs')
+const readFile = require('util').promisify(require('fs').readFile)
+
+readFile('.terraform/environment')
+  .then((env) => {
+    const terraformStateFile = `./terraform.tfstate.d/${env}/terraform.tfstate`
+    const state = JSON.parse(fs.readFileSync(terraformStateFile, 'utf8'))
+    const internalState = terraformToInternal(state)
+    const json = ansibleDynamicInventory(internalState)
+    const sshConfig = internalToSSHConfig(internalState)
+    fs.writeFileSync('./.ssh/config', sshConfig)
+
+    const args = process.argv.slice(2)
+    if (!args[0]) {
+      const indent = (n, arr) => arr.map((l) => `${' '.repeat(n)}${l}\n`).join('')
+      const groups = Object.values(internalState.groups)
+        .map((group) =>
+          `${group.name}:\n` +
+            indent(1, group.hosts.map((host) =>
+              `${host.hostname}:\n` + indent(2, [
+                `public ip:   ${host.publicIP}`,
+                `private ip:  ${host.privateIP}`,
+                `ssh ip:      ${host.sshIP}`,
+                `ssh ${host.sshUser}@${host.sshIP} ${group.vars.ansible_ssh_common_args || ''}`
+              ])
+            ))
+        ).join('')
+
+      return console.log(`Groups:\n${groups}`)
+    }
+
+    const useList = args.indexOf('--list') !== -1
+    const hasHost = args.indexOf('--host')
+    if (hasHost !== -1) {
+      const sshIP = args[hasHost + 1]
+      console.log(JSON.stringify(json._meta.hostvars[sshIP] || {}))
+    } else if (useList) {
+      console.log(JSON.stringify(json))
+    } else {
+      console.log(JSON.stringify(internalState, null, 2))
+    }
+  })
+  .catch((err) => {
+    const isInAnsible = process.argv.indexOf('--list') !== -1
+    const ansibleNewlineFix = ' '.repeat(1000)
+    console.error([
+      err.code === 'ENOENT' ? 'Please set a terraform workspace using `terraform workspace select`' : 'Unhandled error in dynamic inventory.',
+      err.stack.split('\n').map((l) => `​　[ERR]: ${l}${isInAnsible ? ansibleNewlineFix : '\n'}`).join('') // eslint-disable-line
+    ].join(isInAnsible ? ansibleNewlineFix : '\n'))
+    if (isInAnsible) console.log('{}')
+    process.exit(0)
+  })
+
+function terraformToInternal (state) {
+  const hosts = state.modules.reduce(function (groups, mod) {
+    return Object.keys(mod.resources).reduce((_hosts, resourceName) => {
+      const resource = mod.resources[resourceName]
+      return normalizeHosts(_hosts, mod, resource)
+    }, groups)
+  }, {})
+
+  const groups = {}
+  for (const hostId in hosts) {
+    const host = hosts[hostId]
+
+    for (const tag of host.tags) {
+      const group = getGroup(groups, tag)
+      group.hosts.push(host)
+      group.vars.ansible_user = `rancher`
+    }
+  }
+
+  return {hosts, groups}
+}
+
+function internalToSSHConfig ({groups, hosts}) {
+  return `
+    ${Object.values(hosts).map((host) => `
+    Host ${host.hostname} ${host.publicIP} ${host.privateIP}
+      HostName ${host.sshIP}
+      User rancher
+      StrictHostKeyChecking no
+      CheckHostIP no
+      AddKeysToAgent yes
+      ForwardAgent yes
+      IdentityFile ./key.pem
+      ${toProxyCommand(groups, host)}`).join('\n')}
+
+    Host *
+      ControlMaster   auto
+      ControlPath     ~/.ssh/mux-%r@%h:%p
+      ControlPersist  15m
+  `.split('\n').map((l) => l.slice(4)).join('\n')
+}
+
+function toProxyCommand (groups, host) {
+  const proxyGroup = host.sshProxies[0]
+  if (!proxyGroup) return ''
+  const bastion = Object.values(groups[proxyGroup].hosts)[0]
+  if (!bastion) return ''
+  return `ProxyJump ${bastion.sshIP}`
+}
+
+function ansibleDynamicInventory ({groups, hosts}) {
+  const ansibleJsonInventory = {_meta: {hostvars: {}}}
+  for (const groupName in groups) {
+    const group = groups[groupName]
+    ansibleJsonInventory[group.name] = {vars: group.vars}
+    ansibleJsonInventory[group.name].hosts = group.hosts.map((host) => host.sshIP)
+  }
+
+  for (const host of Object.values(hosts)) {
+    ansibleJsonInventory._meta.hostvars[host.sshIP] = host
+  }
+  return ansibleJsonInventory
+}
+
+// Normalize Terraform State
+function getGroup (groups, name) {
+  groups[name] = groups[name] || {name, hosts: [], vars: {}}
+  return groups[name]
+}
+
+function normalizeHosts (hosts, mod, resource) {
+  if (resource.type !== 'digitalocean_droplet') return hosts
+  if (!resource.primary) return hosts
+  const hostId = getAttr(resource, 'id')
+  hosts[hostId] = {
+    id: hostId,
+    provider: 'digitalocean',
+    hostname: getAttr(resource, 'name'),
+    region: getAttr(resource, 'region'),
+    sshIP: getAttr(resource, 'ipv4_address'),
+    sshPort: 22,
+    sshUser: /rancher/.test(getAttr(resource, 'image')) ? 'rancher' : 'root',
+    sshProxies: [],
+    publicIP: getAttr(resource, 'ipv4_address'),
+    privateIP: getAttr(resource, 'ipv4_address_private'),
+    tags: getAttrList(resource, 'tags'),
+    vars: {}
+  }
+
+  if (!hosts[hostId].tags.includes('bastion')) hosts[hostId].tags.push('ssh_proxy__bastion')
+
+  for (const i in hosts[hostId].tags) {
+    const tag = hosts[hostId].tags[i]
+    const useSSHProxy = /^ssh_proxy__(.*)/.exec(tag)
+    if (!useSSHProxy) continue
+    hosts[hostId].sshProxies.push(useSSHProxy[1])
+    hosts[hostId].tags.splice(i, 1)
+  }
+
+  return hosts
+}
+
+function getAttr (resource, key) {
+  return resource.primary.attributes[key]
+}
+
+function getAttrList (resource, key) {
+  const count = getAttr(resource, `${key}.#`)
+  if (!count) return []
+  return ' '.repeat(count).split().map((v, index) => getAttr(resource, `${key}.${index}`))
+}
