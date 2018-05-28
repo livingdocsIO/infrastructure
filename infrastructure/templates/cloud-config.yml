@@ -1,7 +1,7 @@
 #cloud-config
 rancher:
+  resize_device: /dev/vda
   console: ubuntu
-
   sysctl:
     vm.swappiness: 1
     vm.max_map_count: 262144
