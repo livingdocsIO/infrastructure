@@ -1,4 +1,5 @@
 resource "random_id" "bastion" {
+  count = "1"
   prefix = "bastion-"
   byte_length = 8
 }
@@ -11,7 +12,8 @@ data "template_file" "cloud_init" {
 }
 
 resource "digitalocean_droplet" "bastion" {
-  name = "${random_id.bastion.hex}"
+  count = "1"
+  name = "${element(random_id.bastion.*.hex, count.index)}"
   image = "rancheros"
   region = "fra1"
   size = "s-1vcpu-1gb"
@@ -53,13 +55,13 @@ resource "digitalocean_firewall" "bastion" {
     protocol              = "tcp"
     port_range            = "443"
     destination_addresses = ["0.0.0.0/0", "::/0"]
+  }, {
+    protocol              = "tcp"
+    port_range            = "9200"
+    destination_tags = ["elasticsearch"]
   }]
 }
 
-output "Bastion Name" {
-  value = "${digitalocean_droplet.bastion.name}"
-}
-
-output "Bastion IP" {
-  value = "${digitalocean_droplet.bastion.ipv4_address}"
+output "bastion" {
+  value = "${zipmap(digitalocean_droplet.bastion.*.name, digitalocean_droplet.bastion.*.ipv4_address)}"
 }

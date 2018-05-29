@@ -10,14 +10,13 @@
   tasks:
   - name: Register Custom Public Key on rancherOS node
     raw: |
-      printf "ssh_authorized_keys:\n$(ros config get ssh_authorized_keys)" >> keys.yml
+      printf "ssh_authorized_keys:\n$(ros config get ssh_authorized_keys)" > keys.yml
       if grep -q "{{ public_key_openssh }}" keys.yml
       then
-          sed -i "s/^$2.*$/$3/" $1
           echo "- {{ public_key_openssh }}" >> keys.yml
           ros config merge -i keys.yml
-          rm keys.yml
       fi
+      rm keys.yml
     register: output
     changed_when: output.stdout != ""
 

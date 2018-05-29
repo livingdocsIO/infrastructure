@@ -35,18 +35,12 @@ resource "digitalocean_firewall" "elasticsearch" {
     source_tags      = ["bastion"]
   }, {
     protocol         = "tcp"
+    port_range       = "9200"
+    source_tags      = ["elasticsearch", "monitoring", "prometheus", "bastion"]
+  }, {
+    protocol         = "tcp"
     port_range       = "9200-9400"
     source_tags      = ["elasticsearch"]
-  }, {
-    // Elastic-HQ
-    protocol         = "tcp"
-    port_range       = "5000"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }, {
-    // Kibana
-    protocol         = "tcp"
-    port_range       = "5601"
-    source_addresses = ["0.0.0.0/0", "::/0"]
   }]
 
   outbound_rule = [{
@@ -72,11 +66,7 @@ resource "digitalocean_firewall" "elasticsearch" {
   }]
 }
 
-output "Elasticsearch Name" {
-  value = "${digitalocean_droplet.elasticsearch.*.name}"
-}
-
-output "Elasticsearch IP" {
-  value = "${digitalocean_droplet.elasticsearch.*.ipv4_address}"
+output "elasticsearch" {
+  value = "${zipmap(digitalocean_droplet.elasticsearch.*.name, digitalocean_droplet.elasticsearch.*.ipv4_address)}"
 }
 

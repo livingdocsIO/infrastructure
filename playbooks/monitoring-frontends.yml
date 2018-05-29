@@ -1,0 +1,43 @@
+---
+- name: Monitoring Frontends
+  hosts: monitoring-frontends
+  become: true
+  gather_facts: true
+
+  vars:
+    elasticsearch_host: "http://localhost:9200"
+
+  tasks:
+  - name: Create monitoring-frontends directory
+    file: path=/etc/monitoring-frontends state=directory
+
+  # - set_fact:
+  #     elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+
+  - name: Generate grafana.ini
+    template:
+      src: templates/monitoring-frontends/grafana.ini
+      dest: '/etc/monitoring-frontends/grafana.ini'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Generate docker-compose.yml
+    template:
+      src: templates/monitoring-frontends/docker-compose.yml
+      dest: '/var/lib/rancher/conf/monitoring-frontends.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Deploy monitoring-frontends images on server
+    raw: ros service enable /var/lib/rancher/conf/monitoring-frontends.yml
+
+  - name: Start kibana on server
+    raw: ros service up kibana
+
+  - name: Start elasticsearch-hq on server
+    raw: ros service up elasticsearch-hq
+
+  - name: Start grafana on server
+    raw: ros service up grafana

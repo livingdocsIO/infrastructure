@@ -37,14 +37,25 @@ terraform destroy ./infrastructure
 ```
 
 #### TODO
-- protect the elasticsearch dashboards (kibana, elasticsearch-hq)
-- make elasticsearch private again
-- log agent setup (probably filebeat)
-- setup prometheus with the node and elasticsearch exporters
-- install backup software for prometheus (to s3 or digital ocean spaces)
-- install etcd (for postgres stolon and maybe kubernetes)
-- install rancher (or kubernetes)
+- [] protect the elasticsearch dashboards (kibana, elasticsearch-hq)
+- [] make elasticsearch private again
+- [] log agent setup (probably filebeat)
+- [] setup prometheus with the node-, cadvisor- and elasticsearch exporters
+- [] install backup software for prometheus (to s3 or digital ocean spaces)
+- [] install etcd (for postgres stolon and maybe kubernetes)
+- [] install rancher (to port current system, use kubernetes in the future)
 
+##### Backup
+- [] Grafana
+- []
+
+## Urls
+logs.{{ cluster }}.{{ domain }} // kibana
+logs.{{ cluster }}.{{ domain }}:9200 // elasticsearch
+logs.{{ cluster }}.{{ domain }}:5000 // elasticsearch-hq
+
+monitoring.{{ cluster }}.{{ domain }} // grafana
+monitoring.{{ cluster }}.{{ domain }}:9090 // prometheus
 
 ## Elasticsearch
 Elasticsearch is used for logs

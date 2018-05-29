@@ -1,0 +1,4 @@
+---
+- import_playbook: node.yml
+- import_playbook: elasticsearch.yml
+- import_playbook: logging.yml

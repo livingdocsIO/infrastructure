@@ -1,0 +1,44 @@
+---
+- name: Add a public key to all nodes
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+
+  tasks:
+  - name: Create Filebeat directory
+    file: path=/etc/filebeat state=directory
+
+  - name: Generate filebeat.yml
+    template:
+      src: templates/filebeat/filebeat.yml
+      dest: '/etc/filebeat/filebeat.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Generate docker-compose.yml
+    template:
+      src: templates/filebeat/docker-compose.yml
+      dest: '/var/lib/rancher/conf/filebeat.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Deploy filebeat image on server
+    raw: ros service enable /var/lib/rancher/conf/filebeat.yml
+
+  - name: Start filebeat on server
+    raw: ros service up filebeat
+
+  - pause:
+      seconds: 5
+
+  - name: Echo docker container status
+    shell: '{% raw %}docker ps -f name=filebeat -a --format "{{.ID}}: {{.Names}} - {{.Status}}"{% endraw %}'
+    register: dockerstate
+    tags: [healthcheck]
+
+  - debug: msg="{{ dockerstate.stdout }}"
+    tags: [healthcheck]

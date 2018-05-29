@@ -84,7 +84,7 @@ function internalToSSHConfig ({groups, hosts}) {
       CheckHostIP no
       AddKeysToAgent yes
       ForwardAgent yes
-      IdentityFile ./key.pem
+      IdentityFile ./.ssh/id_rsa
       ${toProxyCommand(groups, host)}`).join('\n')}
 
     Host *

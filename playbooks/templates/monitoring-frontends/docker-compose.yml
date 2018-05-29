@@ -1,0 +1,28 @@
+# Those services belong onto their own server
+# as there's no need to run 3 of them.
+# Kibana also consumes a bit much memory because of nodes garbage collector.
+# Let's move it onto a monitoring-frontends server
+# that contains stateless apps
+kibana:
+  image: docker.elastic.co/kibana/kibana-oss:6.2.4
+  ports: ["5601:5601"]
+  restart: unless-stopped
+  environment:
+    SERVER_NAME: kibana.livingdocs.io
+    ELASTICSEARCH_URL: http://172.17.0.1:9200
+    NODE_OPTIONS: --max-old-space-size=250
+
+elasticsearch-hq:
+  image: elastichq/elasticsearch-hq:release-v3.4.0
+  ports: ["5000:5000"]
+  restart: unless-stopped
+  environment:
+    HQ_DEFAULT_URL: http://172.17.0.1:9200
+
+grafana:
+  image: monitoringartist/grafana-xxl
+  ports: ["3000:3000"]
+  volumes: ['/etc/monitoring/grafana.ini:/etc/grafana/grafana.ini:ro']
+  restart: always
+  environment:
+    - UPGRADEALL=false

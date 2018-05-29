@@ -12,7 +12,27 @@ path.data: /usr/share/elasticsearch/data
 path.logs: /usr/share/elasticsearch/logs
 
 node.name: ${HOSTNAME}
-cluster.name: main
+cluster.name: {{ elasticsearch_cluster_name }}
 
 discovery.zen.minimum_master_nodes: {{ elasticsearch_minimum_master_nodes }}
 discovery.zen.ping.unicast.hosts: {{ elasticsearch_hosts }}
+
+# searchguard:
+#   ssl:
+#     transport:
+#       pemkey_filepath:
+#       pemkey_password:
+#       pemcert_filepath:
+#       pemtrustedcas_filepath:
+
+#   http:
+#     pemkey_filepath:
+#     pemkey_password:
+#     pemcert_filepath:
+#     pemtrustedcas_filepath:
+
+#   nodes_dn:
+#     - 'CN=node.other.com,OU=SSL,O=Test,L=Test,C=DE'
+#     - 'CN=*.example.com,OU=SSL,O=Test,L=Test,C=DE'
+#     - 'CN=elk-devcluster*'
+#     - '/CN=.*regex/'

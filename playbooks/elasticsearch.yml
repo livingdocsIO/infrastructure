@@ -5,7 +5,9 @@
   gather_facts: true
 
   vars:
-    elasticsearch_minimum_master_nodes: 2
+    elasticsearch_master_eligible_nodes: "{{ groups['elasticsearch'] | length }}"
+    elasticsearch_cluster_name: logs
+    elasticsearch_minimum_master_nodes: "{{ ((groups['elasticsearch'] | length) / 2) | int + 1 }}"
     elasticsearch_number_of_replicas: 0
 
   tasks:
@@ -39,7 +41,7 @@
       group: root
       mode: 0644
 
-  - name: Deploy elasticsearch on server
+  - name: Deploy elasticsearch images on server
     raw: ros service enable /var/lib/rancher/conf/elasticsearch.yml
 
   - name: Start elasticsearch on server
@@ -48,27 +50,4 @@
   - name: Start elasticsearch-exporter on server
     raw: ros service up elasticsearch-exporter
 
-  - name: Start kibana on server
-    raw: ros service up kibana
-
-  - name: Start elasticsearch-hq on server
-    raw: ros service up elasticsearch-hq
-
-  - name: Started... waiting for Cluster Health "green"
-    action: shell warn=False curl -u elastic:{{ elasticsearch_initial_password }} -s -m 2 localhost:9200/_cluster/health?wait_for_status=green
-    register: clusterstate
-    until: clusterstate.stdout.find("green") != -1
-    retries: 40
-    delay: 5
-    tags: [healthcheck]
-
-  - name: Echo docker container status
-    shell: '{% raw %}docker ps -a --format "{{.ID}}: {{.Names}} - {{.Status}}"{% endraw %}'
-    register: dockerstate
-    tags: [healthcheck]
-
-  - debug: msg="{{ clusterstate.stdout }}"
-    tags: [healthcheck]
-
-  - debug: msg="{{ dockerstate.stdout }}"
-    tags: [healthcheck]
+  - import_tasks: tasks/elasticsearch-cluster-health.yml
