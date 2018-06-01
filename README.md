@@ -2,7 +2,7 @@
 
 Create a terraform workspace
 ```
-terraform workspace create development
+terraform workspace new development
 ```
 
 copy the example.terraform.tfvars file to terraform.tfvars
