@@ -9,7 +9,7 @@ kibana:
   restart: unless-stopped
   environment:
     SERVER_NAME: kibana.livingdocs.io
-    ELASTICSEARCH_URL: http://172.17.0.1:9200
+    ELASTICSEARCH_URL: {{ elasticsearch_host }}
     NODE_OPTIONS: --max-old-space-size=250
 
 elasticsearch-hq:
@@ -17,7 +17,7 @@ elasticsearch-hq:
   ports: ["5000:5000"]
   restart: unless-stopped
   environment:
-    HQ_DEFAULT_URL: http://172.17.0.1:9200
+    HQ_DEFAULT_URL: {{ elasticsearch_host }}
 
 grafana:
   image: monitoringartist/grafana-xxl

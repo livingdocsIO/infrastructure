@@ -1,18 +1,29 @@
 ---
 - name: Monitoring Frontends
-  hosts: monitoring-frontends
+  hosts: monitoring
   become: true
   gather_facts: true
-
   vars:
-    elasticsearch_host: "http://localhost:9200"
+    grafana_root_url: ''
+    grafana_admin_user: ''
+    grafana_admin_password: ''
+    grafana_db_url: ''
+    grafana_github_client_id: ''
+    grafana_github_client_secret: ''
+    grafana_github_team_ids: ''
+    grafana_s3_bucket: ''
+    grafana_s3_bucket_region: ''
+    grafana_s3_access_key: ''
+    grafana_s3_secret_key: ''
 
   tasks:
   - name: Create monitoring-frontends directory
     file: path=/etc/monitoring-frontends state=directory
 
-  # - set_fact:
-  #     elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+  - set_fact:
+      elasticsearch_ansible_host: "{{ groups['elasticsearch'] | first }}"
+      elasticsearch_ansible_host_ip: "{{ hostvars['{{ elasticsearch_ansible_host }}'].privateIP }}"
+      elasticsearch_host: "http://{{ elasticsearch_ansible_host_ip }}:9200"
 
   - name: Generate grafana.ini
     template:
