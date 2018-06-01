@@ -1,0 +1,37 @@
+---
+- name: Prometheus
+  hosts: prometheus
+  become: true
+  gather_facts: true
+
+  tasks:
+  - name: Create prometheus directory
+    file: path=/etc/prometheus state=directory
+
+  - name: Generate prometheus.yml
+    template:
+      src: templates/prometheus/prometheus.yml
+      dest: '/etc/prometheus/prometheus.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Generate docker-compose.yml
+    template:
+      src: templates/prometheus/docker-compose.yml
+      dest: '/var/lib/rancher/conf/prometheus.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Create prometheus directory
+    file:
+      path: /data/prometheus
+      state: directory
+      mode: 0777
+
+  - name: Deploy prometheus images on server
+    raw: ros service enable /var/lib/rancher/conf/prometheus.yml
+
+  - name: Start prometheus on server
+    raw: ros service up prometheus

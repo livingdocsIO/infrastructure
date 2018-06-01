@@ -1,15 +1,14 @@
 node-exporter:
   restart: unless-stopped
-  container_name: node-exporter
   image: prom/node-exporter:v0.16.0
-  command: --path.procfs /host/proc --path.sysfs /host/sys --collector.filesystem.ignored-mount-points '^/(rootfs\/)?(sys|proc|dev|host|etc|var|run)($$$|/)'
-  network_mode: host
-  volumes: ['/proc:/host/proc:ro', '/sys:/host/sys:ro', '/:/rootfs:ro,rslave']
+  ports: ["9100:9100"]
+  command: --path.procfs /host_proc --path.sysfs /host_sys --collector.filesystem.ignored-mount-points '^/(rootfs\/)?(sys|proc|dev|host|etc|var|run)($$|/)'
+  volumes: ['/proc:/host_proc:ro', '/sys:/host_sys:ro', '/:/rootfs:ro,rslave']
 
 cadvisor:
   restart: unless-stopped
-  container_name: cadvisor
   image: google/cadvisor:v0.27.4
+  ports: ["8080:8080"]
   volumes:
     - /:/rootfs:ro
     - /var/run:/var/run:rw

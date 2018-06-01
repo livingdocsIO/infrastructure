@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 10s
+  scrape_timeout: 10s
+  evaluation_interval: 1m
+
+scrape_configs:
+
+  - job_name: 'prometheus'
+    static_configs:
+      {% for node in groups['prometheus'] %}
+      - targets: ['{{ hostvars[node].privateIP }}:9090']
+      {% endfor %}
+
+  - job_name: 'node'
+    static_configs:
+      {% for node in groups['all'] %}
+      - targets: ['{{ hostvars[node].privateIP }}:9100']
+      {% endfor %}
+
+  - job_name: 'cadvisor'
+    static_configs:
+      {% for node in groups['all'] %}
+      - targets: ['{{ hostvars[node].privateIP }}:8080']
+      {% endfor %}
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      {% for node in groups['elasticsearch'] %}
+      - targets: ['{{ hostvars[node].privateIP }}:9108']
+      {% endfor %}
+

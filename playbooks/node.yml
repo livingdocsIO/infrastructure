@@ -63,3 +63,22 @@
       user: "{{ sshUser }}"
       key: "{{ hostvars[item].public_key_openssh }} {{ hostvars[item].sshUser }}@{{ item }}"
     with_items: "{{ groups['bastion'] }}"
+
+
+  - name: Generate docker-compose.yml
+    template:
+      src: templates/base/docker-compose.yml
+      dest: '/var/lib/rancher/conf/base.yml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Deploy base images on server
+    raw: ros service enable /var/lib/rancher/conf/base.yml
+
+  - name: Start node-exporter on server
+    raw: ros service up node-exporter
+
+  - name: Start cadvisor on server
+    raw: ros service up cadvisor
+

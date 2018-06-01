@@ -4,7 +4,7 @@
   become: true
   gather_facts: true
   vars:
-    elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+    elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'privateIP') | to_json }}"
 
   tasks:
   - name: Create Filebeat directory
