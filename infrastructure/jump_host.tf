@@ -33,6 +33,14 @@ resource "digitalocean_firewall" "bastion" {
     protocol           = "tcp"
     port_range         = "22"
     source_addresses   = ["0.0.0.0/0", "::/0"]
+  }, { # node exporter
+    protocol              = "tcp"
+    port_range            = "9100"
+    source_tags = ["prometheus"]
+  }, { # cadvisor
+    protocol              = "tcp"
+    port_range            = "8080"
+    source_tags = ["prometheus"]
   }]
 
   outbound_rule = [{

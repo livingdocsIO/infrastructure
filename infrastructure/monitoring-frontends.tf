@@ -33,11 +33,18 @@ resource "digitalocean_firewall" "monitoring" {
     protocol         = "tcp"
     port_range       = "22"
     source_tags      = ["bastion"]
-  }, {
-    // monitoring http port
+  }, { # monitoring http port
     protocol         = "tcp"
     port_range       = "443"
     source_addresses = ["0.0.0.0/0", "::/0"]
+  }, { # node exporter
+    protocol              = "tcp"
+    port_range            = "9100"
+    source_tags = ["prometheus"]
+  }, { # cadvisor
+    protocol              = "tcp"
+    port_range            = "8080"
+    source_tags = ["prometheus"]
   }]
 
   outbound_rule = [{

@@ -37,7 +37,16 @@ resource "digitalocean_firewall" "prometheus" {
     // Prometheus http port
     protocol         = "tcp"
     port_range       = "9090"
-    source_tags      = ["bastion"]
+    # source_tags      = ["bastion"]
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }, { # cadvisor
+    protocol              = "tcp"
+    port_range            = "8080"
+    source_tags = ["prometheus"]
+  }, { # elasticsearch exporter
+    protocol              = "tcp"
+    port_range            = "9108"
+    source_tags = ["prometheus"]
   }]
 
   outbound_rule = [{
@@ -58,7 +67,7 @@ resource "digitalocean_firewall" "prometheus" {
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }, {
     protocol              = "tcp"
-    port_range            = "9000-9400"
+    port_range            = "8080-9400"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }]
 }

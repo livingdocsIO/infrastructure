@@ -41,6 +41,18 @@ resource "digitalocean_firewall" "elasticsearch" {
     protocol         = "tcp"
     port_range       = "9200-9400"
     source_tags      = ["elasticsearch"]
+  }, { # node exporter
+    protocol              = "tcp"
+    port_range            = "9100"
+    source_tags = ["prometheus"]
+  }, { # cadvisor
+    protocol              = "tcp"
+    port_range            = "8080"
+    source_tags = ["prometheus"]
+  }, { # elasticsearch exporter
+    protocol              = "tcp"
+    port_range            = "9108"
+    source_tags = ["prometheus"]
   }]
 
   outbound_rule = [{
