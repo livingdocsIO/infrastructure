@@ -107,11 +107,11 @@ function ansibleDynamicInventory ({groups, hosts}) {
   for (const groupName in groups) {
     const group = groups[groupName]
     ansibleJsonInventory[group.name] = {vars: group.vars}
-    ansibleJsonInventory[group.name].hosts = group.hosts.map((host) => host.sshIP)
+    ansibleJsonInventory[group.name].hosts = group.hosts.map((host) => host.hostname)
   }
 
   for (const host of Object.values(hosts)) {
-    ansibleJsonInventory._meta.hostvars[host.sshIP] = host
+    ansibleJsonInventory._meta.hostvars[host.hostname] = host
   }
   return ansibleJsonInventory
 }
