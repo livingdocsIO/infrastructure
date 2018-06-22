@@ -161,5 +161,6 @@ function getAttr (resource, key) {
 function getAttrList (resource, key) {
   const count = getAttr(resource, `${key}.#`)
   if (!count) return []
-  return ' '.repeat(count).split().map((v, index) => getAttr(resource, `${key}.${index}`))
+
+  return ' '.repeat(count).split('').map((v, index) => getAttr(resource, `${key}.${index}`))
 }
