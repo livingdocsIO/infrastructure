@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/upfrontIO/infrastructure-v2#readme",
   "dependencies": {
-    "hcl-to-json": "^0.1.1"
+    "hcl": "^0.1.0"
   }
 }

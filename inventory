@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const readFile = require('util').promisify(require('fs').readFile)
-const hcltojson = require('hcl-to-json')
+const hcltojson = require('hcl')
 
 readFile('.terraform/environment')
   .then((env) => {
     const terraformStateFile = `./terraform.tfstate.d/${env}/terraform.tfstate`
     const state = JSON.parse(fs.readFileSync(terraformStateFile, 'utf8'))
-    const globalTerraformConfig = hcltojson(fs.readFileSync('./terraform.tfvars', 'utf8'))
+    const globalTerraformConfig = hcltojson.parse(fs.readFileSync('./terraform.tfvars', 'utf8'))
     const internalState = terraformToInternal(state, globalTerraformConfig)
     const json = ansibleDynamicInventory(internalState)
     const sshConfig = internalToSSHConfig(internalState)
@@ -46,11 +46,18 @@ readFile('.terraform/environment')
   .catch((err) => {
     const isInAnsible = process.argv.indexOf('--list') !== -1
     const ansibleNewlineFix = ' '.repeat(1000)
-    console.error([
-      err.code === 'ENOENT' ? 'Please set a terraform workspace using `terraform workspace select`' : 'Unhandled error in dynamic inventory.',
-      err.stack.split('\n').map((l) => `​　[ERR]: ${l}${isInAnsible ? ansibleNewlineFix : '\n'}`).join('') // eslint-disable-line
-    ].join(isInAnsible ? ansibleNewlineFix : '\n'))
-    if (isInAnsible) console.log('{}')
+    const message = err.code === 'ENOENT' ? 'Please set a terraform workspace using `terraform workspace select`' : 'Unhandled error in dynamic inventory.'
+
+    if (isInAnsible) {
+      console.error([
+        message,
+        (err.stack || err.message).split('\n').map((l) => `​　[ERR]: ${l}${ansibleNewlineFix}`).join('') // eslint-disable-line
+      ].join(ansibleNewlineFix))
+      console.log('{}')
+    } else {
+      console.error(message)
+      console.error(err)
+    }
     process.exit(0)
   })
 

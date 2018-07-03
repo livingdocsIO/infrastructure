@@ -52,6 +52,12 @@ OAUTH2_PROXY_EMAIL_DOMAIN = "*"
 OAUTH2_PROXY_COOKIE_DOMAIN = ".example.com"
 
 # Ansible variables for prometheus playbook
-prometheus_federation_username = "example-federation-basic-auth-username"
-prometheus_federation_password = "example-federation-basic-auth-password"
-prometheus_federation_targets = ["upstream-prometheus-1.example.com:9090", "upstream-prometheus-2.example.com:9090"]
+prometheus_federation_target "federation" {
+  target = "upstream-prometheus-production.example.com:9090"
+  target = "upstream-prometheus-development.example.com:9090"
+
+  basic_auth = {
+    username = "federate"
+    password = "some-random-password"
+  }
+}

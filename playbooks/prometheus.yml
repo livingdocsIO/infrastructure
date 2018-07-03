@@ -16,6 +16,9 @@
       group: root
       mode: 0644
 
+  # - name: show templating results
+  #   debug: msg="{{ lookup('template', 'templates/prometheus/prometheus.yml') }}"
+
   - name: Generate docker-compose.yml
     template:
       src: templates/prometheus/docker-compose.yml

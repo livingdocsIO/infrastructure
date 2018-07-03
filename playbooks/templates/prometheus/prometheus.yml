@@ -1,44 +1,52 @@
+#jinja2: trim_blocks:False
 global:
   scrape_interval: 10s
   scrape_timeout: 10s
   evaluation_interval: 1m
 
 scrape_configs:
-  {% if prometheus_federation_targets | length > 1 -%}
-  - job_name: 'federate'
-    scrape_interval: 15s
+  {% for job in prometheus_federation_target -%}
+    {% for job_name in job -%}
+      {%- set job_vars = dict(job[job_name] | map('dictsort') | sum(start=[])) -%}
+  - job_name: '{{ job_name }}'
+    scrape_interval: {{ job_vars.scrape_interval | default("15s") }}
     honor_labels: true
-    metrics_path: /federate
+    metrics_path: {{ job_vars.metrics_path | default("/federate") }}
     params:
       match[]:
         - '{__name__=~".+"}'
 
+      {% if 'basic_auth' in job_vars %}
+        {% set job_basic_auth = dict(job_vars.basic_auth.value | map('dictsort') | sum(start=[])) %}
     basic_auth:
-      username: '{{ prometheus_federation_username }}'
-      password: '{{ prometheus_federation_password }}'
+      username: "{{ job_basic_auth.username }}"
+      password: "{{ job_basic_auth.password }}"
+      {%- endif %}
 
     static_configs:
-      - targets:
-        {% for target in prometheus_federation_targets %}
-        - '{{ target }}'
-        {% endfor %}
-  {% endif %}
+      - targets: {{ job[job_name] | json_query('[?target].target') | to_json }}
+        {% if 'labels' in job_vars -%}
+          {% set job_labels = dict(job_vars.labels.value | map('dictsort') | sum(start=[])) -%}
+        labels: {{ job_labels | to_yaml }}
+        {%- endif -%}
+    {%- endfor %}
+  {% endfor %}
 
   - job_name: 'prometheus'
     static_configs:
-      {% for node in groups['prometheus'] %}
+      {% for node in groups['prometheus'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9090']
       {% endfor %}
 
   - job_name: 'node'
     static_configs:
-      {% for node in groups['all'] %}
+      {% for node in groups['all'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9100']
       {% endfor %}
 
   - job_name: 'cadvisor'
     static_configs:
-      {% for node in groups['all'] %}
+      {% for node in groups['all'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:8080']
       {% endfor %}
 
