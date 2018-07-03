@@ -1,21 +1,91 @@
-filebeat.prospectors:
-- type: log
-  paths:
-   - '/var/lib/docker/containers/*/*.log'
-  json.message_key: log
-  json.keys_under_root: true
+filebeat.inputs:
+- type: docker
+  ignore_older: 24h
+  containers:
+    path: "/var/lib/docker/containers"
+    stream: "all"
+    ids: ["*"]
+
+  multiline:
+    pattern: '^$|^[[:space:]]{1,}'
+    negate: false
+    match: after
+
+  json:
+    message_key: msg
+    keys_under_root: true
+    add_error_key: false
+    ignore_decoding_error: true
+
   processors:
   - add_docker_metadata:
       host: "unix:///var/run/docker.sock"
 
-- type: log
-  paths:
-   - '/var/lib/system-docker/containers/*/*.log'
-  json.message_key: log
-  json.keys_under_root: true
+- type: docker
+  ignore_older: 24h
+  containers:
+    path: "/var/lib/system-docker/containers"
+    stream: "all"
+    ids: ["*"]
+
+  multiline:
+    pattern: '^$|^[[:space:]]{1,}'
+    negate: false
+    match: after
+
+  json:
+    message_key: msg
+    keys_under_root: true
+    add_error_key: false
+    ignore_decoding_error: true
+
   processors:
   - add_docker_metadata:
       host: "unix:///var/run/system-docker.sock"
 
+fields_under_root: true
+
+# fields:
+#   namespace: {{ namespace }}
+
+processors:
+- drop_event:
+    when:
+      equals:
+        req.url: '/status'
+
+- rename:
+    ignore_missing: true
+    fail_on_error: false
+    fields:
+     - from: "message"
+       to: "msg"
+
+     - from: "docker.container.id"
+       to: "container_id"
+
+     - from: "docker.container.image"
+       to: "container_image"
+
+     - from: "docker.container.name"
+       to: "container_name"
+
+     - from: "docker.container.labels.com.docker.compose.project"
+       to: "service"
+
+     - from: "docker.container.labels.io.rancher.stack_service.name"
+       to: "service"
+
+     - from: "docker.container.labels.service"
+       to: "service"
+
+     - from: "host.name"
+       to: "hostname"
+
+- drop_fields:
+    fields: ["beat", "offset", "source", "input", "prospector", "docker", "v", "time", "pid"]
+
+
 output.elasticsearch:
   hosts: {{ elasticsearch_hosts }}
+  compression: 6

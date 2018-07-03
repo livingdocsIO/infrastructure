@@ -8,7 +8,7 @@ rancher:
     # Required by elasticsearch
     vm.max_map_count: 262144
 
-    # Default limit for the os as processes should limit max file descriptors
+    # Default limit for the os as processes/docker should limit max file descriptors
     fs.file-max: 1000000000
     net.core.somaxconn: 65535
     net.ipv4.tcp_max_syn_backlog: 4096

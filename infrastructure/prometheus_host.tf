@@ -23,6 +23,10 @@ resource "digitalocean_droplet" "prometheus" {
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_prometheus.rendered}"
   tags = ["${digitalocean_tag.prometheus.id}"]
+
+  lifecycle {
+    ignore_changes = ["user_data"]
+  }
 }
 
 resource "digitalocean_firewall" "prometheus" {
@@ -32,21 +36,20 @@ resource "digitalocean_firewall" "prometheus" {
   inbound_rule = [{
     protocol         = "tcp"
     port_range       = "22"
-    source_tags      = ["bastion"]
-  }, {
-    // Prometheus http port
+    source_tags      = ["${digitalocean_tag.bastion.name}"]
+  }, { # Prometheus http port
     protocol         = "tcp"
     port_range       = "9090"
-    # source_tags      = ["bastion"]
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_tags      = ["${digitalocean_tag.bastion.name}", "${digitalocean_tag.monitoring.name}"]
+    # source_addresses = ["0.0.0.0/0", "::/0"]
+  }, { # node exporter
+    protocol              = "tcp"
+    port_range            = "9100"
+    source_tags      = ["${digitalocean_tag.prometheus.name}"]
   }, { # cadvisor
     protocol              = "tcp"
     port_range            = "8080"
-    source_tags = ["prometheus"]
-  }, { # elasticsearch exporter
-    protocol              = "tcp"
-    port_range            = "9108"
-    source_tags = ["prometheus"]
+    source_tags      = ["${digitalocean_tag.prometheus.name}"]
   }]
 
   outbound_rule = [{

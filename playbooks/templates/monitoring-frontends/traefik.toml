@@ -1,0 +1,39 @@
+logLevel = "INFO"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "localhost"
+watch = true
+exposedByDefault = false
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+  [entryPoints.admin]
+  address = ":81"
+  [entryPoints.internal]
+  address = ":82"
+
+[metrics]
+  [metrics.prometheus]
+    buckets = [0.1,0.3,1.2,5.0]
+
+[api]
+  dashboard = true
+  entryPoint = "admin"
+
+[acme]
+email = "support@{{ cluster_domain_zone }}"
+storage = "/opt/monitoring-frontends/acme.json"
+onHostRule = true
+caServer = "https://acme-v02.api.letsencrypt.org/directory"
+entryPoint = "https"
+  [acme.httpChallenge]
+  entryPoint = "http"
+
+[[acme.domains]]
+  main = "{{ cluster_domain_rancher }}"
+  sans = ["{{ cluster_domain_prometheus }}", "{{ cluster_domain_prometheus }}"]

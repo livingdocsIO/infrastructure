@@ -4,6 +4,25 @@ global:
   evaluation_interval: 1m
 
 scrape_configs:
+  {% if prometheus_federation_targets | length > 1 -%}
+  - job_name: 'federate'
+    scrape_interval: 15s
+    honor_labels: true
+    metrics_path: /federate
+    params:
+      match[]:
+        - '{__name__=~".+"}'
+
+    basic_auth:
+      username: '{{ prometheus_federation_username }}'
+      password: '{{ prometheus_federation_password }}'
+
+    static_configs:
+      - targets:
+        {% for target in prometheus_federation_targets %}
+        - '{{ target }}'
+        {% endfor %}
+  {% endif %}
 
   - job_name: 'prometheus'
     static_configs:
@@ -23,9 +42,51 @@ scrape_configs:
       - targets: ['{{ hostvars[node].privateIP }}:8080']
       {% endfor %}
 
+    metric_relabel_configs:
+      - action: 'replace'
+        source_labels: ['container_label_io_rancher_project_name']
+        target_label: 'stack_name'
+
+      - action: 'replace'
+        source_labels: ['container_label_io_rancher_stack_service_name']
+        regex: '[a-zA-Z0-9_-]*/([a-zA-Z0-9_-]*)'
+        target_label: 'service_name'
+
+      - action: 'replace'
+        source_labels: ['id']
+        regex: '/docker/(.+)'
+        target_label: 'container_id'
+
+      - action: 'replace'
+        source_labels: ['id']
+        regex: '/docker/(.+)'
+        replacement: ''
+        target_label: 'id'
+
+      - action: 'drop'
+        source_labels: ['id']
+        regex: '/(system|user|init).*'
+
+      - action: 'replace'
+        source_labels: ['container_label_io_rancher_container_system']
+        target_label: 'system'
+
+      - action: 'labelmap'
+        regex: 'container_label_prometheus_label_(.+)'
+
+      - action: 'replace'
+        source_labels: ['image']
+        target_label: 'image_name'
+
+      - action: 'replace'
+        source_labels: ['name']
+        target_label: 'container_name'
+
+      - action: 'labeldrop'
+        regex: '(image|container_label_.*|name)'
+
   - job_name: 'elasticsearch'
     static_configs:
-      {% for node in groups['elasticsearch'] %}
+      {% for node in groups['elasticsearch'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9108']
       {% endfor %}
-

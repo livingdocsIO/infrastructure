@@ -1,12 +1,12 @@
 http.port: 9200
 http.publish_port: 9200
 http.bind_host: 0.0.0.0
-http.publish_host: {{ ansible_default_ipv4.address }}
+http.publish_host: {{ privateIP }}
 
 transport.tcp.port: 9300
 transport.publish_port: 9300
 transport.bind_host: 0.0.0.0
-transport.publish_host: {{ ansible_default_ipv4.address }}
+transport.publish_host: {{ privateIP }}
 
 path.data: /usr/share/elasticsearch/data
 path.logs: /usr/share/elasticsearch/logs

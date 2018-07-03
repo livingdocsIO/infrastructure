@@ -1,11 +1,12 @@
 filebeat:
-  restart: unless-stopped
-  image: docker.elastic.co/beats/filebeat:6.2.4
+  restart: always
+  image: docker.elastic.co/beats/filebeat:6.3.0
   user: root
+  hostname: {{ inventory_hostname }}
   volumes: [
     "/var/lib/docker:/var/lib/docker:ro",
     "/var/lib/system-docker:/var/lib/system-docker:ro",
     "/var/run/system-docker.sock:/var/run/system-docker.sock:ro",
     "/var/run/docker.sock:/var/run/docker.sock:ro",
-    "/etc/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml"
+    "/opt/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml"
   ]

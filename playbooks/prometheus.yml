@@ -6,12 +6,12 @@
 
   tasks:
   - name: Create prometheus directory
-    file: path=/etc/prometheus state=directory
+    file: path=/opt/prometheus state=directory
 
   - name: Generate prometheus.yml
     template:
       src: templates/prometheus/prometheus.yml
-      dest: '/etc/prometheus/prometheus.yml'
+      dest: '/opt/prometheus/prometheus.yml'
       owner: root
       group: root
       mode: 0644
@@ -35,3 +35,15 @@
 
   - name: Start prometheus on server
     raw: ros service up prometheus
+
+  - name: Waiting for prometheus to start up
+    action: shell warn=False curl -s --output /dev/null --write-out "%{http_code}" localhost:9090/metrics
+    register: prometheusstate
+    until: prometheusstate.stdout == "200"
+    retries: 5
+    delay: 1
+    tags: [healthcheck]
+
+  - name: Reload prometheus config
+    action: shell warn=False curl -s -XPOST localhost:9090/-/reload
+    tags: [healthcheck]

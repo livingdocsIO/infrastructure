@@ -4,34 +4,30 @@
   become: true
   gather_facts: true
   vars:
-    grafana_root_url: ''
-    grafana_admin_user: ''
-    grafana_admin_password: ''
-    grafana_db_url: ''
-    grafana_github_client_id: ''
-    grafana_github_client_secret: ''
-    grafana_github_team_ids: ''
-    grafana_s3_bucket: ''
-    grafana_s3_bucket_region: ''
-    grafana_s3_access_key: ''
-    grafana_s3_secret_key: ''
+    prometheus_ip: "{{ hostvars | map_hostvars(groups, 'prometheus', 'privateIP') | first }}"
+    prometheus_port: 9090
+    grafana_datasource_prometheus_url: "http://{{ prometheus_ip }}:{{ prometheus_port }}"
 
   tasks:
   - name: Create monitoring-frontends directory
-    file: path=/etc/monitoring-frontends state=directory
+    file: path=/opt/monitoring-frontends state=directory
 
+  # Variables used for elasticsearch-hq
   - set_fact:
       elasticsearch_ansible_host: "{{ groups['elasticsearch'] | first }}"
-      elasticsearch_ansible_host_ip: "{{ hostvars['{{ elasticsearch_ansible_host }}'].privateIP }}"
-      elasticsearch_host: "http://{{ elasticsearch_ansible_host_ip }}:9200"
+
+  - set_fact:
+      elasticsearch_host: "http://{{ hostvars[elasticsearch_ansible_host].privateIP }}:9200"
+      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'privateIP') | to_json }}"
 
   - name: Generate grafana.ini
     template:
-      src: templates/monitoring-frontends/grafana.ini
-      dest: '/etc/monitoring-frontends/grafana.ini'
+      src: templates/monitoring-frontends/{{ item }}
+      dest: '/opt/monitoring-frontends/{{ item }}'
       owner: root
       group: root
       mode: 0644
+    with_items: ["grafana.ini", "grafana-datasources.yml", "traefik.toml"]
 
   - name: Generate docker-compose.yml
     template:
@@ -44,11 +40,23 @@
   - name: Deploy monitoring-frontends images on server
     raw: ros service enable /var/lib/rancher/conf/monitoring-frontends.yml
 
+  - name: Start traefik on server
+    raw: ros service up traefik
+
+  - name: Start oauth-proxy on server
+    raw: ros service up oauth-proxy
+
   - name: Start kibana on server
     raw: ros service up kibana
 
   - name: Start elasticsearch-hq on server
     raw: ros service up elasticsearch-hq
 
+  - name: Start prometheus-proxy on server
+    raw: ros service up prometheus-proxy
+
   - name: Start grafana on server
     raw: ros service up grafana
+
+  - name: Start rancher-server on server
+    raw: ros service up rancher-server

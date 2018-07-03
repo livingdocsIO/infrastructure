@@ -8,12 +8,12 @@
 
   tasks:
   - name: Create Filebeat directory
-    file: path=/etc/filebeat state=directory
+    file: path=/opt/filebeat state=directory
 
   - name: Generate filebeat.yml
     template:
       src: templates/filebeat/filebeat.yml
-      dest: '/etc/filebeat/filebeat.yml'
+      dest: '/opt/filebeat/filebeat.yml'
       owner: root
       group: root
       mode: 0644
@@ -28,6 +28,10 @@
 
   - name: Deploy filebeat image on server
     raw: ros service enable /var/lib/rancher/conf/filebeat.yml
+
+  - name: Deploy filebeat image on server
+    raw: docker rm -f filebeat
+    ignore_errors: yes
 
   - name: Start filebeat on server
     raw: ros service up filebeat

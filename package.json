@@ -1,0 +1,22 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "Create a terraform workspace ``` terraform workspace new development ```",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/upfrontIO/infrastructure-v2.git"
+  },
+  "author": "Marc Bachmann <marc.brookman@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/upfrontIO/infrastructure-v2/issues"
+  },
+  "homepage": "https://github.com/upfrontIO/infrastructure-v2#readme",
+  "dependencies": {
+    "hcl-to-json": "^0.1.1"
+  }
+}

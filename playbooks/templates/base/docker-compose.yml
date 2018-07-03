@@ -1,16 +1,35 @@
 node-exporter:
-  restart: unless-stopped
+  restart: always
   image: prom/node-exporter:v0.16.0
-  ports: ["9100:9100"]
-  command: --path.procfs /host_proc --path.sysfs /host_sys --collector.filesystem.ignored-mount-points '^/(rootfs\/)?(sys|proc|dev|host|etc|var|run)($$|/)'
-  volumes: ['/proc:/host_proc:ro', '/sys:/host_sys:ro', '/:/rootfs:ro,rslave']
+  net: host
+  ports: ['9100:9100']
+  command: --path.procfs /host_proc --path.sysfs /sys --collector.filesystem.ignored-mount-points '^/(rootfs\/)?(sys|proc|dev|host|etc|var|run)($$|/)'
+  volumes: ['/proc:/host_proc:ro', '/sys:/sys:ro', '/:/rootfs:ro,rslave']
+  labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']
 
+# cadvisor needs access to the console docker socket,
+# therefore we can't run it on the system docker
+# maybe we could even get rid of cadvisor if we
+# don't need network and memory stats per container
 cadvisor:
-  restart: unless-stopped
+  restart: always
   image: google/cadvisor:v0.27.4
-  ports: ["8080:8080"]
+  ports: ['8080:8080']
   volumes:
     - /:/rootfs:ro
     - /var/run:/var/run:rw
     - /sys:/sys:ro
     - /var/lib/docker/:/var/lib/docker:ro
+  labels: ['io.rancher.os.after=network']
+
+coredns:
+  restart: always
+  image: coredns/coredns:1.1.4
+  # We need to expose the container using --net=host
+  # Because both subnets (rancher os and regular namespace) need to be able to contact
+  # the dns server. The ip address we're using to contact it is `172.18.42.1`
+  net: host
+  ports: ['53:53', '53:53/udp', '9153:9153']
+  command: -conf /opt/coredns/Corefile
+  volumes: ['/opt/coredns:/opt/coredns']
+  labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']

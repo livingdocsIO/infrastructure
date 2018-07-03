@@ -1,8 +1,21 @@
 # Infrastructure
 
+## Prerequesites
+
+- A Digitalocean account and token
+- An AWS Account set up with a Route53 Zone
+- Set up and edit the config file: `mv example.terraform.tfvars terraform.tfvars`
+- External Mysql (for grafana and rancher)
+
+## Setup
 Create a terraform workspace
 ```
 terraform workspace new development
+npm install // to set up the dependencies of the dynamic ansible inventory
+```
+
+```
+
 ```
 
 copy the example.terraform.tfvars file to terraform.tfvars
@@ -19,16 +32,9 @@ terraform apply ./infrastructure
 ```
 
 wait a few minutes until everything is started and then start
-with the setup of the nodes. This will configure the jump hosts.
+with the setup of the nodes. This will set up elasticsearch, kibana, elasticsearch-hq, rancher and prometheus exporters
 ```
-ansible-playbook ./playbooks/node.yml
-```
-
-Install elasticsearch, kibana, elasticsearch-hq and prometheus exporters
-currently they aren't protected..
-an authentication server that uses github will come soon
-```
-ansible-playbook ./playbooks/elasticsearch.yml
+ansible-playbook ./playbooks/bootstrap.yml
 ```
 
 If you like you can destroy everything again
@@ -37,44 +43,54 @@ terraform destroy ./infrastructure
 ```
 
 #### TODO
-- [] protect the elasticsearch dashboards (kibana, elasticsearch-hq)
-- [] make elasticsearch private again
-- [] log agent setup (probably filebeat)
-- [] setup prometheus with the node-, cadvisor- and elasticsearch exporters
-- [] install backup software for prometheus (to s3 or digital ocean spaces)
-- [] install etcd (for postgres stolon and maybe kubernetes)
-- [] install rancher (to port current system, use kubernetes in the future)
+- [x] protect the elasticsearch dashboards (kibana, elasticsearch-hq)
+- [x] make elasticsearch private again
+- [x] log agent setup (probably filebeat)
+- [x] setup prometheus with the node-, cadvisor- and elasticsearch exporters
+- [x] install rancher (to port current system, use kubernetes in the future)
+- [x] Move mysql into stack (currently it's set up outside of this setup)
+- [ ] install backup software for prometheus (to s3 or digital ocean spaces)
+- [ ] install etcd (for postgres stolon and maybe kubernetes)
 
-##### Backup
-- [] Grafana
-- []
+##### Backup (mysql is currently managed externally)
+- [ ] Grafana (mysql)
+- [ ] Rancher (mysql)
 
 ## Urls
-logs.{{ cluster }}.{{ domain }} // kibana
-logs.{{ cluster }}.{{ domain }}:9200 // elasticsearch
-logs.{{ cluster }}.{{ domain }}:5000 // elasticsearch-hq
+Grafana, Kibana & ES cluster dashboard:
+monitoring.{{ domain }}
+monitoring.{{ domain }}/kibana/
+monitoring.{{ domain }}/elasticsearch-hq/
 
-monitoring.{{ cluster }}.{{ domain }} // grafana
-monitoring.{{ cluster }}.{{ domain }}:9090 // prometheus
+Rancher
+hosted.{{ domain }}
+
+Prometheus
+prometheus.{{ domain }}
 
 ## Elasticsearch
 Elasticsearch is used for logs
 
 ### Kibana
-Used to display logs
+Used to query logs and for debugging
 
 ### Elasticsearch-HQ
-Cluster status dashboard
+Elasticsearch cluster status dashboard
 
+### Worker Nodes
+```
+ansible -m shell -a "sudo docker run --rm --privileged -v /var/run/docker.sock:/var/run/docker.sock -v /var/lib/rancher:/var/lib/rancher rancher/agent:v1.2.10 registrationurl" worker
+```
 
 ## Bastion host
 
 Used as ssh entry point into the private network.
 The bastion host is accessible on the default ssh port 22.
+The ssh key provided during the setup has access to that host.
 
-### Teleport
+### Teleport (might come later)
 
-Teleport is an ssh server that supports two factor authentication and records all sessions. It also offers a web gui to connect to hosts and watch recorded sessions.
+Teleport is an ssh server bastion software that supports two factor authentication and records all sessions. It  offers a web gui to connect to hosts and watch recorded sessions.
 
 ```
 https://localhost:3080/v1/webapi/github/callback
@@ -86,7 +102,5 @@ docker run --name teleport -v $PWD/github.yml:/github.yml -v $PWD/teleport.yml:/
 
 docker exec -it teleport tctl create /github.yml
 ```
-
-
 
 

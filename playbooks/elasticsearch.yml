@@ -12,15 +12,15 @@
 
   tasks:
   - name: Create Elasticsearch directory
-    file: path=/etc/elasticsearch state=directory
+    file: path=/opt/elasticsearch state=directory
 
   - set_fact:
-      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'ansible_default_ipv4.address') | to_json }}"
+      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'privateIP') | to_json }}"
 
   - name: Generate elasticsearch.yml
     template:
       src: templates/elasticsearch/elasticsearch.yml
-      dest: '/etc/elasticsearch/elasticsearch.yml'
+      dest: '/opt/elasticsearch/elasticsearch.yml'
       owner: root
       group: root
       mode: 0644
@@ -28,7 +28,7 @@
   - name: Generate logging.yml
     template:
       src: templates/elasticsearch/logging.yml
-      dest: '/etc/elasticsearch/logging.yml'
+      dest: '/opt/elasticsearch/logging.yml'
       owner: root
       group: root
       mode: 0644

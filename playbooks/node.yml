@@ -64,7 +64,6 @@
       key: "{{ hostvars[item].public_key_openssh }} {{ hostvars[item].sshUser }}@{{ item }}"
     with_items: "{{ groups['bastion'] }}"
 
-
   - name: Generate docker-compose.yml
     template:
       src: templates/base/docker-compose.yml
@@ -72,6 +71,18 @@
       owner: root
       group: root
       mode: 0644
+    tags: [coredns]
+
+  - name: Create coredns directory
+    file: path=/opt/coredns state=directory
+    tags: [coredns]
+
+  - name: Generate /opt/coredns/{{ item }}
+    template:
+      src: templates/coredns/{{ item }}
+      dest: '/opt/coredns/{{ item }}'
+    with_items: ['Corefile', 'cluster.local']
+    tags: [coredns]
 
   - name: Deploy base images on server
     raw: ros service enable /var/lib/rancher/conf/base.yml
@@ -82,3 +93,15 @@
   - name: Start cadvisor on server
     raw: ros service up cadvisor
 
+  - name: Start coredns on server
+    raw: ros service up coredns
+    tags: [coredns]
+
+  - name: Update dns servers
+    raw: |
+      sudo ros config set rancher.network.dns.search "['{{ cluster_domain_namespace }}']"
+      sudo ros config set rancher.network.dns.nameservers "['172.18.42.1','8.8.4.4','4.2.2.3']"
+      sudo system-docker restart network
+    register: output
+    changed_when: output.stdout != ""
+    tags: [coredns]

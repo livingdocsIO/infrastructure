@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 const fs = require('fs')
 const readFile = require('util').promisify(require('fs').readFile)
+const hcltojson = require('hcl-to-json')
 
 readFile('.terraform/environment')
   .then((env) => {
     const terraformStateFile = `./terraform.tfstate.d/${env}/terraform.tfstate`
     const state = JSON.parse(fs.readFileSync(terraformStateFile, 'utf8'))
-    const internalState = terraformToInternal(state)
+    const globalTerraformConfig = hcltojson(fs.readFileSync('./terraform.tfvars', 'utf8'))
+    const internalState = terraformToInternal(state, globalTerraformConfig)
     const json = ansibleDynamicInventory(internalState)
     const sshConfig = internalToSSHConfig(internalState)
     fs.writeFileSync('./.ssh/config', sshConfig)
@@ -52,7 +54,7 @@ readFile('.terraform/environment')
     process.exit(0)
   })
 
-function terraformToInternal (state) {
+function terraformToInternal (state, globalTerraformConfig) {
   const hosts = state.modules.reduce(function (groups, mod) {
     return Object.keys(mod.resources).reduce((_hosts, resourceName) => {
       const resource = mod.resources[resourceName]
@@ -61,6 +63,9 @@ function terraformToInternal (state) {
   }, {})
 
   const groups = {}
+  const all = getGroup(groups, 'all')
+  all.vars = globalTerraformConfig
+
   for (const hostId in hosts) {
     const host = hosts[hostId]
 

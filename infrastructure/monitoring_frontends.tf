@@ -23,6 +23,10 @@ resource "digitalocean_droplet" "monitoring" {
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_monitoring.rendered}"
   tags = ["${digitalocean_tag.monitoring.id}"]
+
+  lifecycle {
+    ignore_changes = ["user_data"]
+  }
 }
 
 resource "digitalocean_firewall" "monitoring" {
@@ -32,40 +36,50 @@ resource "digitalocean_firewall" "monitoring" {
   inbound_rule = [{
     protocol         = "tcp"
     port_range       = "22"
-    source_tags      = ["bastion"]
-  }, { # monitoring http port
-    protocol         = "tcp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_tags      = ["${digitalocean_tag.bastion.name}"]
   }, { # node exporter
     protocol              = "tcp"
     port_range            = "9100"
-    source_tags = ["prometheus"]
+    source_tags      = ["${digitalocean_tag.prometheus.name}"]
   }, { # cadvisor
     protocol              = "tcp"
     port_range            = "8080"
-    source_tags = ["prometheus"]
-  }]
-
-  outbound_rule = [{
-    protocol              = "tcp"
-    port_range            = "53"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
+    source_tags      = ["${digitalocean_tag.prometheus.name}"]
   }, {
+    protocol              = "tcp"
+    port_range            = "80"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }, {
+    protocol              = "tcp"
+    port_range            = "81"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }, {
+    protocol              = "tcp"
+    port_range            = "443"
+    source_addresses = ["0.0.0.0/0", "::/0"]
+  }
+  # , { # temporarily open kibana for testing
+  #   protocol              = "tcp"
+  #   port_range            = "5601"
+  #   source_addresses = ["0.0.0.0/0", "::/0"]
+  # }, { # temporarily open grafana for testing
+  #   protocol              = "tcp"
+  #   port_range            = "3000"
+  #   source_addresses = ["0.0.0.0/0", "::/0"]
+  # }, { # temporarily open elastic-hq for testing
+  #   protocol              = "tcp"
+  #   port_range            = "5000"
+  #   source_addresses = ["0.0.0.0/0", "::/0"]
+  # }
+  ]
+
+  outbound_rule = [, {
     protocol              = "udp"
     port_range            = "53"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }, {
     protocol              = "tcp"
-    port_range            = "80"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }, {
-    protocol              = "tcp"
-    port_range            = "443"
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-  }, {
-    protocol              = "tcp"
-    port_range            = "9000-9400"
+    port_range            = "53-65535"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }]
 }

@@ -1,6 +1,6 @@
 prometheus:
-  image: prom/prometheus:v2.0.0
-  command: --config.file=/etc/prometheus/prometheus.yml --web.external-url=https://prometheus.livingdocs.io --web.route-prefix=/ --storage.tsdb.path=/data --storage.tsdb.retention=6m --web.enable-lifecycle
-  ports: ["9090:9090"]
-  volumes: ['/etc/prometheus:/etc/prometheus:ro', '/data/prometheus:/data']
+  image: prom/prometheus:v2.3.1
+  command: --config.file=/opt/prometheus/prometheus.yml --web.external-url=https://{{ cluster_domain_prometheus }} --web.route-prefix=/ --storage.tsdb.path=/data --storage.tsdb.retention=120d --web.enable-lifecycle
+  ports: ['9090:9090']
+  volumes: ['/opt/prometheus:/opt/prometheus:ro', '/data/prometheus:/data']
   restart: unless-stopped

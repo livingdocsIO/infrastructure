@@ -3,26 +3,101 @@
 # Kibana also consumes a bit much memory because of nodes garbage collector.
 # Let's move it onto a monitoring-frontends server
 # that contains stateless apps
+oauth-proxy:
+  restart: always
+  image: machinedata/oauth2_proxy:2.2
+  environment:
+    OAUTH2_PROXY_GITHUB_ORG: "{{ OAUTH2_PROXY_GITHUB_ORG }}"
+    OAUTH2_PROXY_GITHUB_TEAM: "{{ OAUTH2_PROXY_GITHUB_TEAM }}"
+    OAUTH2_PROXY_UPSTREAM: http://172.17.0.1:82
+    OAUTH2_PROXY_PROVIDER: "{{ OAUTH2_PROXY_PROVIDER }}"
+    OAUTH2_PROXY_CLIENT_ID: "{{ OAUTH2_PROXY_CLIENT_ID }}"
+    OAUTH2_PROXY_CLIENT_SECRET: "{{ OAUTH2_PROXY_CLIENT_SECRET }}"
+    OAUTH2_PROXY_EMAIL_DOMAIN: "{{ OAUTH2_PROXY_EMAIL_DOMAIN }}"
+    OAUTH2_PROXY_REDIRECT_URL: "https://{{ cluster_domain_monitoring }}/oauth2/callback"
+    OAUTH2_PROXY_PASS_BASIC_AUTH: false
+    OAUTH2_PROXY_PASS_USER_HEADERS: true
+    OAUTH2_PROXY_COOKIE_SECURE: true
+    OAUTH2_PROXY_COOKIE_DOMAIN: "{{ OAUTH2_PROXY_COOKIE_DOMAIN }}"
+
+  labels:
+    - traefik.enable=true
+    - traefik.port=4180
+    - traefik.frontend.entryPoints=https,http
+    - traefik.frontend.headers.SSLRedirect=true
+    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }},{{ cluster_domain_prometheus }}
+
+grafana:
+  restart: always
+  image: monitoringartist/grafana-xxl
+  volumes:
+    - /opt/monitoring-frontends/grafana.ini:/etc/grafana/grafana.ini:ro
+    - /opt/monitoring-frontends/grafana-datasources.yml:/etc/grafana/provisioning/datasources/all.yaml:ro
+  environment: ["UPGRADEALL=false"]
+  labels:
+    - traefik.enable=true
+    - traefik.port=3000
+    - traefik.frontend.entryPoints=internal
+    - traefik.frontend.priority=0
+    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }}
+
 kibana:
-  image: docker.elastic.co/kibana/kibana-oss:6.2.4
-  ports: ["5601:5601"]
-  restart: unless-stopped
+  restart: always
+  image: docker.elastic.co/kibana/kibana-oss:6.3.0
   environment:
     SERVER_NAME: kibana.livingdocs.io
     ELASTICSEARCH_URL: {{ elasticsearch_host }}
-    NODE_OPTIONS: --max-old-space-size=250
+    NODE_OPTIONS: --max-old-space-size=750
+    SERVER_BASEPATH: /kibana
+  labels:
+    - traefik.enable=true
+    - traefik.port=5601
+    - traefik.frontend.entryPoints=internal
+    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }};PathPrefixStrip:/kibana/
 
 elasticsearch-hq:
-  image: elastichq/elasticsearch-hq:release-v3.4.0
-  ports: ["5000:5000"]
-  restart: unless-stopped
-  environment:
-    HQ_DEFAULT_URL: {{ elasticsearch_host }}
-
-grafana:
-  image: monitoringartist/grafana-xxl
-  ports: ["3000:3000"]
-  volumes: ['/etc/monitoring/grafana.ini:/etc/grafana/grafana.ini:ro']
   restart: always
+  image: elastichq/elasticsearch-hq:release-v3.4.0
+  environment: ["HQ_DEFAULT_URL={{ elasticsearch_host }}"]
+  labels:
+    - traefik.enable=true
+    - traefik.port=5000
+    - traefik.frontend.entryPoints=internal
+    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }};PathPrefixStrip:/elasticsearch-hq/
+
+prometheus-proxy:
+  restart: always
+  image: marcbachmann/caddy:0.10.6-amd64-semi
+  command: -port 9090 'proxy / {{ prometheus_ip }}:{{ prometheus_port }}'
+  labels:
+    - traefik.enable=true
+    - traefik.port=9090
+    - traefik.frontend.entryPoints=internal
+    - traefik.frontend.rule=Host:{{ cluster_domain_prometheus }}
+
+rancher-server:
+  restart: always
+  image: {{ rancher_docker_image }}
   environment:
-    - UPGRADEALL=false
+    CATTLE_DB_CATTLE_MYSQL_HOST: {{ rancher_database_host }}
+    CATTLE_DB_CATTLE_MYSQL_PORT: {{ rancher_database_port }}
+    CATTLE_DB_CATTLE_MYSQL_NAME: {{ rancher_database_name }}
+    CATTLE_DB_CATTLE_USERNAME: {{ rancher_database_username }}
+    CATTLE_DB_CATTLE_PASSWORD: {{ rancher_database_password }}
+
+  labels:
+    - traefik.enable=true
+    - traefik.port=8080
+    - traefik.frontend.entryPoints=https,http
+    - traefik.frontend.headers.SSLRedirect=true
+    - traefik.frontend.rule=Host:hosted.livingdocs.io
+
+traefik:
+  image: traefik
+  ports: ["443:443", "80:80", "81:81", "82:82"]
+  volumes: [
+    "/var/run/docker.sock:/var/run/docker.sock",
+    "/opt/monitoring-frontends/traefik.toml:/etc/traefik/traefik.toml",
+    "/opt/monitoring-frontends:/opt/monitoring-frontends"
+  ]
+  labels: ["io.rancher.os.after=network"]
