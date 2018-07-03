@@ -1,3 +1,10 @@
+fields_under_root: true
+
+{% if cluster %}
+fields:
+  cluster: {{ cluster }}
+{% endif %}
+
 filebeat.inputs:
 - type: docker
   ignore_older: 24h
@@ -43,10 +50,6 @@ filebeat.inputs:
   - add_docker_metadata:
       host: "unix:///var/run/system-docker.sock"
 
-fields_under_root: true
-
-# fields:
-#   namespace: {{ namespace }}
 
 processors:
 - drop_event:

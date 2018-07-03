@@ -9,3 +9,7 @@ resource "digitalocean_ssh_key" "bastion" {
   name       = "terraform ${terraform.workspace}"
   public_key = "${file(var.ssh_key_public)}"
 }
+
+resource "digitalocean_tag" "cluster_infrastructure" {
+  name = "cluster_infrastructure"
+}

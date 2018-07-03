@@ -36,18 +36,37 @@ scrape_configs:
     static_configs:
       {% for node in groups['prometheus'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9090']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
   - job_name: 'node'
     static_configs:
-      {% for node in groups['all'] -%}
+      {% for node in groups['cluster_infrastructure'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9100']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_production'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9100']
+        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_development'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9100']
+        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
   - job_name: 'cadvisor'
     static_configs:
-      {% for node in groups['all'] -%}
+      {% for node in groups['cluster_infrastructure'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:8080']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_production'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:8080']
+        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_development'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:8080']
+        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
     metric_relabel_configs:
@@ -97,4 +116,5 @@ scrape_configs:
     static_configs:
       {% for node in groups['elasticsearch'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9108']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}

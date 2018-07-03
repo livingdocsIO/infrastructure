@@ -22,7 +22,7 @@ resource "digitalocean_droplet" "prometheus" {
   ipv6 = false
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_prometheus.rendered}"
-  tags = ["${digitalocean_tag.prometheus.id}"]
+  tags = ["${digitalocean_tag.cluster_infrastructure.id}", "${digitalocean_tag.prometheus.id}"]
 
   lifecycle {
     ignore_changes = ["user_data"]

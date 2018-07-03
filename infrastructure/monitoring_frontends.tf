@@ -22,7 +22,7 @@ resource "digitalocean_droplet" "monitoring" {
   ipv6 = false
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_monitoring.rendered}"
-  tags = ["${digitalocean_tag.monitoring.id}"]
+  tags = ["${digitalocean_tag.cluster_infrastructure.id}", "${digitalocean_tag.monitoring.id}"]
 
   lifecycle {
     ignore_changes = ["user_data"]

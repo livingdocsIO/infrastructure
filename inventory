@@ -138,9 +138,13 @@ function normalizeHosts (hosts, mod, resource) {
   if (resource.type !== 'digitalocean_droplet') return hosts
   if (!resource.primary) return hosts
   const hostId = getAttr(resource, 'id')
+  const tags = getAttrList(resource, 'tags')
+  const clusterTag = tags.find((t) => /^cluster_/.test(t))
+
   hosts[hostId] = {
     id: hostId,
     provider: 'digitalocean',
+    cluster: clusterTag && clusterTag.replace('cluster_', ''),
     hostname: getAttr(resource, 'name'),
     region: getAttr(resource, 'region'),
     sshIP: getAttr(resource, 'ipv4_address'),
@@ -149,7 +153,7 @@ function normalizeHosts (hosts, mod, resource) {
     sshProxies: [],
     publicIP: getAttr(resource, 'ipv4_address'),
     privateIP: getAttr(resource, 'ipv4_address_private'),
-    tags: getAttrList(resource, 'tags'),
+    tags: tags,
     vars: {}
   }
 

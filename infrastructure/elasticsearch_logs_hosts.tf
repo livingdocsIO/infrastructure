@@ -27,7 +27,7 @@ resource "digitalocean_droplet" "elasticsearch_logs" {
   ipv6 = false
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_elasticsearch.rendered}"
-  tags = ["${digitalocean_tag.cluster_fra1_elasticsearch_logs.id}", "${digitalocean_tag.elasticsearch.id}"]
+  tags = ["${digitalocean_tag.cluster_fra1_elasticsearch_logs.id}", "${digitalocean_tag.cluster_infrastructure.id}", "${digitalocean_tag.elasticsearch.id}"]
 
   lifecycle {
     ignore_changes = ["user_data"]
