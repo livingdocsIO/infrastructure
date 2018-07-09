@@ -11,7 +11,7 @@ transport.publish_host: {{ privateIP }}
 path.data: /usr/share/elasticsearch/data
 path.logs: /usr/share/elasticsearch/logs
 
-node.name: ${HOSTNAME}
+node.name: {{ hostname }}
 cluster.name: {{ elasticsearch_cluster_name }}
 
 discovery.zen.minimum_master_nodes: {{ elasticsearch_minimum_master_nodes }}
