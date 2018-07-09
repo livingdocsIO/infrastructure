@@ -50,14 +50,18 @@ resource "digitalocean_firewall" "elasticsearch" {
     protocol         = "tcp"
     port_range       = "9200-9400"
     source_tags      = ["${digitalocean_tag.cluster_fra1_elasticsearch_logs.name}"]
-  }, { # node exporter
+  }, { # node prometheus exporter
     protocol              = "tcp"
     port_range            = "9100"
     source_tags      = ["${digitalocean_tag.prometheus.name}"]
-  }, { # cadvisor
+  }, { # cadvisor prometheus exporter
     protocol              = "tcp"
     port_range            = "8080"
-    source_tags      = ["${digitalocean_tag.prometheus.name}"]
+    source_tags = ["${digitalocean_tag.prometheus.name}"]
+  }, { # coredns prometheus exporter
+    protocol              = "tcp"
+    port_range            = "9153"
+    source_tags = ["${digitalocean_tag.prometheus.name}"]
   }, { # elasticsearch exporter
     protocol              = "tcp"
     port_range            = "9108"

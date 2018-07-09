@@ -54,6 +54,21 @@ scrape_configs:
         labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
+  - job_name: 'coredns'
+    static_configs:
+      {% for node in groups['cluster_infrastructure'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9153']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_production'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9153']
+        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+      {% for node in groups['cluster_development'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9153']
+        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+
   - job_name: 'cadvisor'
     static_configs:
       {% for node in groups['cluster_infrastructure'] -%}

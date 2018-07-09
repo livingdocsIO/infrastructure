@@ -70,13 +70,17 @@ resource "digitalocean_firewall" "worker_production" {
     protocol         = "tcp"
     port_range       = "22"
     source_tags      = ["${digitalocean_tag.bastion.name}"]
-  }, { # node exporter
+  }, { # node prometheus exporter
     protocol              = "tcp"
     port_range            = "9100"
     source_tags      = ["${digitalocean_tag.prometheus.name}"]
-  }, { # cadvisor
+  }, { # cadvisor prometheus exporter
     protocol              = "tcp"
     port_range            = "8080"
+    source_tags = ["${digitalocean_tag.prometheus.name}"]
+  }, { # coredns prometheus exporter
+    protocol              = "tcp"
+    port_range            = "9153"
     source_tags = ["${digitalocean_tag.prometheus.name}"]
   }, {
     # Expose prometheus for federation

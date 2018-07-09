@@ -42,14 +42,18 @@ resource "digitalocean_firewall" "prometheus" {
     port_range       = "9090"
     source_tags      = ["${digitalocean_tag.bastion.name}", "${digitalocean_tag.monitoring.name}"]
     # source_addresses = ["0.0.0.0/0", "::/0"]
-  }, { # node exporter
+  }, { # node prometheus exporter
     protocol              = "tcp"
     port_range            = "9100"
     source_tags      = ["${digitalocean_tag.prometheus.name}"]
-  }, { # cadvisor
+  }, { # cadvisor prometheus exporter
     protocol              = "tcp"
     port_range            = "8080"
-    source_tags      = ["${digitalocean_tag.prometheus.name}"]
+    source_tags = ["${digitalocean_tag.prometheus.name}"]
+  }, { # coredns prometheus exporter
+    protocol              = "tcp"
+    port_range            = "9153"
+    source_tags = ["${digitalocean_tag.prometheus.name}"]
   }]
 
   outbound_rule = [{
