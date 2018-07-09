@@ -6,16 +6,16 @@ fields_under_root: true
 
 {% if cluster %}
 fields:
-  cluster: {{ cluster }}
+  '@cluster': {{ cluster }}
 {% endif %}
 
 filebeat.inputs:
 - type: docker
   ignore_older: 24h
   containers:
-    path: "/var/lib/docker/containers"
-    stream: "all"
-    ids: ["*"]
+    path: '/var/lib/docker/containers'
+    stream: 'all'
+    ids: ['*']
 
   multiline:
     pattern: '^$|^[[:space:]]{1,}'
@@ -30,14 +30,14 @@ filebeat.inputs:
 
   processors:
   - add_docker_metadata:
-      host: "unix:///var/run/docker.sock"
+      host: 'unix:///var/run/docker.sock'
 
 - type: docker
   ignore_older: 24h
   containers:
-    path: "/var/lib/system-docker/containers"
-    stream: "all"
-    ids: ["*"]
+    path: '/var/lib/system-docker/containers'
+    stream: 'all'
+    ids: ['*']
 
   multiline:
     pattern: '^$|^[[:space:]]{1,}'
@@ -52,7 +52,7 @@ filebeat.inputs:
 
   processors:
   - add_docker_metadata:
-      host: "unix:///var/run/system-docker.sock"
+      host: 'unix:///var/run/system-docker.sock'
 
 
 processors:
@@ -64,35 +64,65 @@ processors:
 - rename:
     ignore_missing: true
     fail_on_error: false
+    when.has_fields: ['docker.container.labels.io.rancher.container.system']
     fields:
-     - from: "message"
-       to: "msg"
+     - from: 'docker.container.labels.io.rancher.container.system'
+       to: '@system'
 
-     - from: "docker.container.id"
-       to: "container_id"
+- rename:
+    ignore_missing: true
+    fail_on_error: false
+    when.has_fields: ['docker.container.labels.com.docker.compose.service']
+    fields:
+     - from: 'docker.container.labels.com.docker.compose.service'
+       to: '@system'
 
-     - from: "docker.container.image"
-       to: "container_image"
+- rename:
+    ignore_missing: true
+    fail_on_error: false
+    when.has_fields: ['docker.container.labels.logging.infrastructure']
+    fields:
+     - from: 'docker.container.labels.io.rancher.stack_service.name'
+       to: '@system'
 
-     - from: "docker.container.name"
-       to: "container_name"
+- rename:
+    ignore_missing: true
+    fail_on_error: false
+    fields:
+     - from: 'msg'
+       to: 'message'
 
-     - from: "docker.container.labels.com.docker.compose.project"
-       to: "service"
+     - from: 'docker.container.id'
+       to: '@container_id'
 
-     - from: "docker.container.labels.io.rancher.stack_service.name"
-       to: "service"
+     - from: 'docker.container.image'
+       to: '@container_image'
 
-     - from: "docker.container.labels.service"
-       to: "service"
+     - from: 'docker.container.name'
+       to: '@container_name'
 
-     - from: "host.name"
-       to: "hostname"
+     - from: 'docker.container.labels.com.docker.compose.project'
+       to: '@service'
+
+     - from: 'docker.container.labels.io.rancher.stack_service.name'
+       to: '@service'
+
+     - from: 'host.name'
+       to: '@hostname'
+
+     - from: 'stream'
+       to: '@stream'
 
 - drop_fields:
-    fields: ["beat", "offset", "source", "input", "prospector", "docker", "v", "time", "pid"]
+    fields: ['beat', 'offset', 'source', 'input', 'prospector', 'docker', 'v', 'time', 'pid']
 
+setup.template.name: 'logs'
+setup.template.pattern: 'logs-*'
 
 output.elasticsearch:
   hosts: {{ elasticsearch_hosts }}
   compression: 6
+  index: 'logs-%{[@cluster]}-%{+yyyy.MM.dd}'
+  indices:
+    - index: 'logs-infrastructure-%{+yyyy.MM.dd}'
+      when.has_fields: ['@system']
