@@ -26,7 +26,7 @@ oauth-proxy:
     - traefik.port=4180
     - traefik.frontend.entryPoints=https,http
     - traefik.frontend.headers.SSLRedirect=true
-    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }},{{ cluster_domain_prometheus }}
+    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }},{{ cluster_domain_prometheus }},{{ cluster_domain_kibana }},{{ cluster_domain_elasticsearch_hq }}
 
 grafana:
   restart: always
@@ -49,12 +49,11 @@ kibana:
     SERVER_NAME: kibana.livingdocs.io
     ELASTICSEARCH_URL: {{ elasticsearch_host }}
     NODE_OPTIONS: --max-old-space-size=750
-    SERVER_BASEPATH: /kibana
   labels:
     - traefik.enable=true
     - traefik.port=5601
     - traefik.frontend.entryPoints=internal
-    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }};PathPrefixStrip:/kibana/
+    - traefik.frontend.rule=Host:{{ cluster_domain_kibana }}
 
 elasticsearch-hq:
   restart: always
@@ -64,7 +63,7 @@ elasticsearch-hq:
     - traefik.enable=true
     - traefik.port=5000
     - traefik.frontend.entryPoints=internal
-    - traefik.frontend.rule=Host:{{ cluster_domain_monitoring }};PathPrefixStrip:/elasticsearch-hq/
+    - traefik.frontend.rule=Host:{{ cluster_domain_elasticsearch_hq }}
 
 prometheus-proxy:
   restart: always
