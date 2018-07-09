@@ -1,3 +1,7 @@
+logging.level: info
+logging.metrics.enabled: true
+logging.json: true
+
 fields_under_root: true
 
 {% if cluster %}
