@@ -19,6 +19,7 @@ oauth-proxy:
     OAUTH2_PROXY_PASS_USER_HEADERS: true
     OAUTH2_PROXY_COOKIE_SECURE: true
     OAUTH2_PROXY_COOKIE_DOMAIN: "{{ OAUTH2_PROXY_COOKIE_DOMAIN }}"
+    OAUTH2_PROXY_REQUEST_LOGGING: false
 
   labels:
     - traefik.enable=true
