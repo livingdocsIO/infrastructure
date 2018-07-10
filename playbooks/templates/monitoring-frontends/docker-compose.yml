@@ -30,7 +30,7 @@ oauth-proxy:
 
 grafana:
   restart: always
-  image: monitoringartist/grafana-xxl
+  image: monitoringartist/grafana-xxl:5.2
   volumes:
     - /opt/monitoring-frontends/grafana.ini:/etc/grafana/grafana.ini:ro
     - /opt/monitoring-frontends/grafana-datasources.yml:/etc/grafana/provisioning/datasources/all.yaml:ro

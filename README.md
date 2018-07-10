@@ -48,7 +48,7 @@ terraform destroy ./infrastructure
 - [x] log agent setup (probably filebeat)
 - [x] setup prometheus with the node-, cadvisor- and elasticsearch exporters
 - [x] install rancher (to port current system, use kubernetes in the future)
-- [x] Move mysql into stack (currently it's set up outside of this setup)
+- [ ] Move mysql into stack (currently it's set up outside of this setup)
 - [ ] install backup software for prometheus (to s3 or digital ocean spaces)
 - [ ] install etcd (for postgres stolon and maybe kubernetes)
 

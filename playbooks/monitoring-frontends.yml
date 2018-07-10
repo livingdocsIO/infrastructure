@@ -15,12 +15,15 @@
   # Variables used for elasticsearch-hq
   - set_fact:
       elasticsearch_ansible_host: "{{ groups['elasticsearch'] | first }}"
+    tags: [setup]
 
   - set_fact:
       elasticsearch_host: "http://{{ hostvars[elasticsearch_ansible_host].privateIP }}:9200"
       elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'privateIP') | to_json }}"
+    tags: [setup]
 
   - name: Generate grafana.ini
+    tags: [setup]
     template:
       src: templates/monitoring-frontends/{{ item }}
       dest: '/opt/monitoring-frontends/{{ item }}'
@@ -30,6 +33,7 @@
     with_items: ["grafana.ini", "grafana-datasources.yml", "traefik.toml"]
 
   - name: Generate docker-compose.yml
+    tags: [setup]
     template:
       src: templates/monitoring-frontends/docker-compose.yml
       dest: '/var/lib/rancher/conf/monitoring-frontends.yml'
@@ -54,9 +58,12 @@
 
   - name: Start prometheus-proxy on server
     raw: ros service up prometheus-proxy
+    tags: [prometheus]
 
   - name: Start grafana on server
-    raw: ros service up grafana
+    raw: ros service stop grafana && ros service up grafana
+    tags: [grafana]
 
   - name: Start rancher-server on server
-    raw: ros service up rancher-server
+    raw: ros service stop rancher-server && ros service up rancher-server
+    tags: [rancher]
