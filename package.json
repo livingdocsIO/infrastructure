@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/upfrontIO/infrastructure-v2.git"
+    "url": "git+https://github.com/livingdocsIO/infrastructure-v2.git"
   },
   "author": "Marc Bachmann <marc.brookman@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/upfrontIO/infrastructure-v2/issues"
+    "url": "https://github.com/livingdocsIO/infrastructure-v2/issues"
   },
-  "homepage": "https://github.com/upfrontIO/infrastructure-v2#readme",
+  "homepage": "https://github.com/livingdocsIO/infrastructure-v2#readme",
   "dependencies": {
     "hcl": "^0.1.0"
   }
