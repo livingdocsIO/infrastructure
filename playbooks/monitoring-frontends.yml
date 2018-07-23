@@ -48,7 +48,8 @@
     raw: ros service up traefik
 
   - name: Start oauth-proxy on server
-    raw: ros service up oauth-proxy
+    raw: ros service stop oauth-proxy && ros service up oauth-proxy
+    tags: [oauth-proxy]
 
   - name: Start kibana on server
     raw: ros service up kibana
