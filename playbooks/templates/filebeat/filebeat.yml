@@ -118,6 +118,9 @@ processors:
 
 setup.template.name: 'logs'
 setup.template.pattern: 'logs-*'
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 1
 
 output.elasticsearch:
   hosts: {{ elasticsearch_hosts }}
