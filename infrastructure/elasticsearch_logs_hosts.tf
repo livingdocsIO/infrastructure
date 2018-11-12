@@ -42,6 +42,10 @@ resource "digitalocean_firewall" "elasticsearch" {
     protocol         = "tcp"
     port_range       = "22"
     source_tags      = ["${digitalocean_tag.bastion.name}"]
+  }, { # ntp
+    protocol         = "udp"
+    port_range       = "123"
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }, {
     protocol         = "tcp"
     port_range       = "9200"
@@ -88,6 +92,15 @@ resource "digitalocean_firewall" "elasticsearch" {
     protocol = "tcp"
     port_range = "9200-9400"
     destination_tags = ["${digitalocean_tag.cluster_fra1_elasticsearch_logs.name}"]
+  }, {
+    protocol              = "tcp"
+    port_range            = "53-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  },
+  {
+    protocol              = "udp"
+    port_range            = "53-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
   }]
 }
 

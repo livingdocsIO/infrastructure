@@ -37,6 +37,10 @@ resource "digitalocean_firewall" "bastion" {
     protocol           = "tcp"
     port_range         = "22"
     source_addresses   = ["0.0.0.0/0", "::/0"]
+  }, { # ntp
+    protocol         = "udp"
+    port_range       = "123"
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }, { # node prometheus exporter
     protocol              = "tcp"
     port_range            = "9100"
@@ -79,6 +83,15 @@ resource "digitalocean_firewall" "bastion" {
     protocol              = "tcp"
     port_range            = "9200"
     destination_tags = ["${digitalocean_tag.cluster_fra1_elasticsearch_logs.name}"]
+  }, {
+    protocol              = "tcp"
+    port_range            = "53-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  },
+  {
+    protocol              = "udp"
+    port_range            = "53-65535"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
   }]
 }
 

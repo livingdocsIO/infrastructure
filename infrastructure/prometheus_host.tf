@@ -37,6 +37,10 @@ resource "digitalocean_firewall" "prometheus" {
     protocol         = "tcp"
     port_range       = "22"
     source_tags      = ["${digitalocean_tag.bastion.name}"]
+  }, { # ntp
+    protocol         = "udp"
+    port_range       = "123"
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }, { # Prometheus http port
     protocol         = "tcp"
     port_range       = "9090"
@@ -67,6 +71,10 @@ resource "digitalocean_firewall" "prometheus" {
   }, {
     protocol              = "tcp"
     port_range            = "80"
+    destination_addresses = ["0.0.0.0/0", "::/0"]
+  }, { # ntp
+    protocol              = "udp"
+    port_range            = "123"
     destination_addresses = ["0.0.0.0/0", "::/0"]
   }, {
     protocol              = "tcp"

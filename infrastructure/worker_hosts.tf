@@ -70,6 +70,10 @@ resource "digitalocean_firewall" "worker_production" {
     protocol         = "tcp"
     port_range       = "22"
     source_tags      = ["${digitalocean_tag.bastion.name}"]
+  }, { # ntp
+    protocol         = "udp"
+    port_range       = "123"
+    source_addresses = ["0.0.0.0/0", "::/0"]
   }, { # node prometheus exporter
     protocol              = "tcp"
     port_range            = "9100"
