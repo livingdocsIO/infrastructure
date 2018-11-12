@@ -5,7 +5,7 @@ resource "random_id" "worker" {
 }
 
 resource "random_id" "worker_development" {
-  count = "3"
+  count = "4"
   prefix = "worker-"
   byte_length = 8
 }
@@ -45,7 +45,7 @@ resource "digitalocean_droplet" "worker_production" {
 }
 
 resource "digitalocean_droplet" "worker_development" {
-  count = "3"
+  count = "4"
   name = "${random_id.worker_development.*.hex[count.index]}"
   image = "rancheros"
   region = "fra1"
