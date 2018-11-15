@@ -44,6 +44,10 @@
   - name: Deploy elasticsearch images on server
     raw: ros service enable /var/lib/rancher/conf/elasticsearch.yml
 
+  - name: Destroy the old elasticsearch container
+    raw: (docker stop elasticsearch && docker rm elasticsearch) || docker rm -f elasticsearch
+    ignore_errors: yes
+
   - name: Start elasticsearch on server
     raw: ros service up elasticsearch
 
