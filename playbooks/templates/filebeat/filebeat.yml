@@ -1,4 +1,4 @@
-logging.level: info
+logging.level: warning
 logging.metrics.enabled: true
 logging.json: true
 
