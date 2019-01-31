@@ -15,6 +15,11 @@
       owner: root
       group: root
       mode: 0644
+    tags: [config]
+
+  - name: Waiting for prometheus to start up
+    action: shell warn=False docker kill --signal=HUP prometheus
+    tags: [never, config]
 
   # - name: show templating results
   #   debug: msg="{{ lookup('template', 'templates/prometheus/prometheus.yml') }}"
