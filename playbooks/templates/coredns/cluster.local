@@ -1,3 +1,9 @@
 {% for node in groups['all'] %}
 {{ hostvars[node].privateIP }} {{ hostvars[node].hostname }}.{{ cluster_domain_namespace }}
 {% endfor %}
+
+{% for clusterName in clusters -%}
+  {% for node in groups['cluster_' + clusterName] -%}
+  {{ hostvars[node].privateIP }} {{ clusterName }}.{{ cluster_domain_namespace }}
+  {% endfor %}
+{% endfor %}

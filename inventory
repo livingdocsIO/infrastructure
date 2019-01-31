@@ -71,7 +71,8 @@ function terraformToInternal (state, globalTerraformConfig) {
 
   const groups = {}
   const all = getGroup(groups, 'all')
-  all.vars = globalTerraformConfig
+  const clusters = {}
+  all.vars = {...all.vars, ...globalTerraformConfig}
 
   for (const hostId in hosts) {
     const host = hosts[hostId]
@@ -81,8 +82,11 @@ function terraformToInternal (state, globalTerraformConfig) {
       group.hosts.push(host)
       group.vars.ansible_user = `rancher`
     }
+
+    if (host.cluster) clusters[host.cluster] = true
   }
 
+  all.vars.clusters = Object.keys(clusters)
   return {hosts, groups}
 }
 
