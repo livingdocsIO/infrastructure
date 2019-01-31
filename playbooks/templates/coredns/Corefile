@@ -1,14 +1,22 @@
 .:53 {
     reload
-    cache 30
+
+    log . {
+      class denial error
+    }
+
+    cache {
+      success 5000 60 5
+      denial 2500 60 5
+      prefetch 1
+    }
+
     proxy . 8.8.4.4 4.2.2.3
 
     hosts /opt/coredns/cluster.local {
       fallthrough
     }
 
-    log stdout
-    errors stdout
     health 0.0.0.0:8053
     prometheus 0.0.0.0:9153
 }
