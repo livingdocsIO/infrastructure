@@ -14,12 +14,12 @@
 
   # Variables used for elasticsearch-hq
   - set_fact:
-      elasticsearch_ansible_host: "{{ groups['elasticsearch'] | first }}"
+      elasticsearch_ansible_host: "{{ groups['cluster_fra1_elasticsearch_logs'] | first }}"
     tags: [setup]
 
   - set_fact:
       elasticsearch_host: "http://{{ hostvars[elasticsearch_ansible_host].privateIP }}:9200"
-      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'elasticsearch', 'privateIP') | to_json }}"
+      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'cluster_fra1_elasticsearch_logs', 'privateIP') | to_json }}"
     tags: [setup]
 
   - name: Generate grafana.ini

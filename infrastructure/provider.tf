@@ -10,6 +10,5 @@ resource "digitalocean_ssh_key" "bastion" {
   public_key = "${file(var.ssh_key_public)}"
 }
 
-resource "digitalocean_tag" "cluster_infrastructure" {
-  name = "cluster_infrastructure"
-}
+resource "digitalocean_tag" "cluster_infrastructure" {name = "cluster_infrastructure"}
+resource "digitalocean_tag" "elasticsearch" {name = "elasticsearch"}

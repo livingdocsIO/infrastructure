@@ -1,13 +1,13 @@
 ---
 - name: Elasticsearch
-  hosts: cluster_fra1_elasticsearch_logs
+  hosts: es_ld_fra1
   become: true
   gather_facts: true
 
   vars:
-    elasticsearch_master_eligible_nodes: "{{ groups['cluster_fra1_elasticsearch_logs'] | length }}"
-    elasticsearch_cluster_name: logs
-    elasticsearch_minimum_master_nodes: "{{ ((groups['cluster_fra1_elasticsearch_logs'] | length) / 2) | int + 1 }}"
+    elasticsearch_master_eligible_nodes: "{{ groups['es_ld_fra1'] | length }}"
+    elasticsearch_cluster_name: es_ld_fra1
+    elasticsearch_minimum_master_nodes: "{{ ((groups['es_ld_fra1'] | length) / 2) | int + 1 }}"
     elasticsearch_number_of_replicas: 0
 
   tasks:
@@ -15,7 +15,7 @@
     file: path=/opt/elasticsearch state=directory
 
   - set_fact:
-      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'cluster_fra1_elasticsearch_logs', 'privateIP') | to_json }}"
+      elasticsearch_hosts: "{{ hostvars | map_hostvars(groups, 'es_ld_fra1', 'privateIP') | to_json }}"
 
   - name: Generate elasticsearch.yml
     template:

@@ -119,7 +119,14 @@ scrape_configs:
 
   - job_name: 'elasticsearch'
     static_configs:
-      {% for node in groups['elasticsearch'] -%}
+      {% for node in groups['cluster_fra1_elasticsearch_logs'] -%}
+      - targets: ['{{ hostvars[node].privateIP }}:9108']
+        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+      {% endfor %}
+
+  - job_name: 'elasticsearch_ld'
+    static_configs:
+      {% for node in groups['cluster_fra1_elasticsearch_logs'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9108']
         labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
