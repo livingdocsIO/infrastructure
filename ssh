@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ssh rancher@$1 -F .ssh/config $2
+TERM=xterm exec ssh rancher@$1 -F .ssh/config $2
