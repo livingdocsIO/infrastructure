@@ -45,7 +45,8 @@
     raw: ros service enable /var/lib/rancher/conf/monitoring-frontends.yml
 
   - name: Start traefik on server
-    raw: ros service up traefik
+    raw: ros service stop traefik && ros service up traefik
+    tags: [traefik]
 
   - name: Start oauth-proxy on server
     raw: ros service stop oauth-proxy && ros service up oauth-proxy
