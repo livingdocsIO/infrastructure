@@ -3,6 +3,8 @@ mysql:
   ports: ["5601:5601"]
   environment:
     PASSWORD: {{ mysql_password }}
+  sysctls:
+    net.core.somaxconn: 65535
 
 mysql-backup:
   image: mysql

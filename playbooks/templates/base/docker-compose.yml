@@ -34,3 +34,5 @@ coredns:
   command: -conf /opt/coredns/Corefile
   volumes: ['/opt/coredns:/opt/coredns']
   labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']
+  sysctls:
+    net.core.somaxconn: 65535

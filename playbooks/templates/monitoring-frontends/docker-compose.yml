@@ -20,6 +20,8 @@ oauth-proxy:
     OAUTH2_PROXY_COOKIE_SECURE: true
     OAUTH2_PROXY_COOKIE_DOMAIN: "{{ OAUTH2_PROXY_COOKIE_DOMAIN }}"
     OAUTH2_PROXY_REQUEST_LOGGING: false
+  sysctls:
+    net.core.somaxconn: 65535
 
   labels:
     - traefik.enable=true
@@ -74,6 +76,8 @@ prometheus-proxy:
     - traefik.port=9090
     - traefik.frontend.entryPoints=internal
     - traefik.frontend.rule=Host:{{ cluster_domain_prometheus }}
+  sysctls:
+    net.core.somaxconn: 65535
 
 rancher-server:
   restart: always
@@ -91,6 +95,8 @@ rancher-server:
     - traefik.frontend.entryPoints=https,http
     - traefik.frontend.headers.SSLRedirect=true
     - traefik.frontend.rule=Host:hosted.livingdocs.io
+  sysctls:
+    net.core.somaxconn: 65535
 
 traefik:
   image: traefik
@@ -101,3 +107,5 @@ traefik:
     "/opt/monitoring-frontends:/opt/monitoring-frontends"
   ]
   labels: ["io.rancher.os.after=network"]
+  sysctls:
+    net.core.somaxconn: 65535

@@ -4,3 +4,5 @@ prometheus:
   ports: ['9090:9090']
   volumes: ['/opt/prometheus:/opt/prometheus:ro', '/data/prometheus:/data']
   restart: unless-stopped
+  sysctls:
+    net.core.somaxconn: 65535

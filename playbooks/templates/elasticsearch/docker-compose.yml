@@ -10,6 +10,8 @@ elasticsearch:
     memlock:
       soft: -1
       hard: -1
+  sysctls:
+    net.core.somaxconn: 65535
 
 elasticsearch-exporter:
   image: justwatch/elasticsearch_exporter:1.0.2
