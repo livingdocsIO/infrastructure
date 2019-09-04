@@ -41,6 +41,10 @@
   - name: Deploy prometheus images on server
     raw: ros service enable /var/lib/rancher/conf/prometheus.yml
 
+  - name: Destroy the old prometheus container
+    raw: (docker stop prometheus && docker rm prometheus) || docker rm -f prometheus || echo 'no prometheus is running'
+    ignore_errors: yes
+
   - name: Start prometheus on server
     raw: ros service up prometheus
 
