@@ -48,7 +48,7 @@ resource "digitalocean_firewall" "elasticsearch" {
   }, {
     protocol         = "tcp"
     port_range       = "9200"
-    source_tags      = ["${digitalocean_tag.monitoring.name}", "${digitalocean_tag.prometheus.name}", "${digitalocean_tag.bastion.name}", "${digitalocean_tag.cluster_fra1_elasticsearch_logs.name}", "${digitalocean_tag.es_ld_fra1.name}", "worker", "role_worker"]
+    source_tags      = ["${digitalocean_tag.monitoring.name}", "${digitalocean_tag.prometheus.name}", "${digitalocean_tag.bastion.name}", "${digitalocean_tag.cluster_fra1_elasticsearch_logs.name}", "${digitalocean_tag.es_ld_fra1.name}", "${digitalocean_tag.role_worker.id}"]
   }, {
     protocol         = "tcp"
     port_range       = "9200-9400"

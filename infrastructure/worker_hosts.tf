@@ -5,21 +5,26 @@ resource "random_id" "worker" {
 }
 
 resource "random_id" "worker_development" {
-  count = "4"
+  count = "3"
   prefix = "worker-"
+  byte_length = 8
+}
+
+resource "random_id" "worker_forward" {
+  count = "1"
+  prefix = "worker-forward-"
   byte_length = 8
 }
 
 resource "digitalocean_tag" "role_worker" {name = "role_worker"}
 
-resource "digitalocean_tag" "worker" {name = "worker"}
+resource "digitalocean_tag" "worker_production" {name = "worker_production"}
 resource "digitalocean_tag" "worker_development" {name = "worker_development"}
+resource "digitalocean_tag" "worker_forward" {name = "worker_forward"}
 
 resource "digitalocean_tag" "cluster_production" {name = "cluster_production"}
 resource "digitalocean_tag" "cluster_development" {name = "cluster_development"}
-
-# resource "digitalocean_tag" "worker_production" {name = "worker_production"}
-# resource "digitalocean_tag" "worker_ci" {name = "worker_cluster_ci"}
+resource "digitalocean_tag" "cluster_forward" {name = "cluster_forward"}
 
 data "template_file" "cloud_init_worker" {
   template = "${file("${path.module}/templates/cloud-config.yml")}"
@@ -37,7 +42,7 @@ resource "digitalocean_droplet" "worker_production" {
   ipv6 = false
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_worker.rendered}"
-  tags = ["${digitalocean_tag.cluster_production.id}", "${digitalocean_tag.role_worker.id}", "${digitalocean_tag.worker.id}"]
+  tags = ["${digitalocean_tag.role_worker.id}", "${digitalocean_tag.cluster_production.id}"]
 
   lifecycle {
     ignore_changes = ["user_data"]
@@ -45,7 +50,7 @@ resource "digitalocean_droplet" "worker_production" {
 }
 
 resource "digitalocean_droplet" "worker_development" {
-  count = "4"
+  count = "3"
   name = "${random_id.worker_development.*.hex[count.index]}"
   image = "rancheros"
   region = "fra1"
@@ -55,7 +60,25 @@ resource "digitalocean_droplet" "worker_development" {
   ipv6 = false
   ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
   user_data = "${data.template_file.cloud_init_worker.rendered}"
-  tags = ["${digitalocean_tag.cluster_development.id}", "${digitalocean_tag.role_worker.id}", "${digitalocean_tag.worker_development.id}"]
+  tags = ["${digitalocean_tag.role_worker.id}", "${digitalocean_tag.cluster_development.id}"]
+
+  lifecycle {
+    ignore_changes = ["user_data"]
+  }
+}
+
+resource "digitalocean_droplet" "worker_forward" {
+  count = "1"
+  name = "${random_id.worker_forward.*.hex[count.index]}"
+  image = "rancheros"
+  region = "fra1"
+  size = "s-4vcpu-8gb"
+  private_networking = true
+  backups = false
+  ipv6 = false
+  ssh_keys = ["${digitalocean_ssh_key.bastion.fingerprint}"]
+  user_data = "${data.template_file.cloud_init_worker.rendered}"
+  tags = ["${digitalocean_tag.role_worker.id}", "${digitalocean_tag.cluster_forward.id}"]
 
   lifecycle {
     ignore_changes = ["user_data"]
@@ -64,7 +87,7 @@ resource "digitalocean_droplet" "worker_development" {
 
 resource "digitalocean_firewall" "worker_production" {
   name = "worker-production"
-  droplet_ids = ["${digitalocean_droplet.worker_production.*.id}", "${digitalocean_droplet.worker_development.*.id}"]
+  tags = ["${digitalocean_tag.role_worker.id}"]
 
   inbound_rule = [{
     protocol         = "tcp"
@@ -132,4 +155,8 @@ output "worker_production" {
 
 output "worker_development" {
   value = "${zipmap(digitalocean_droplet.worker_development.*.name, digitalocean_droplet.worker_development.*.ipv4_address)}"
+}
+
+output "worker_forward" {
+  value = "${zipmap(digitalocean_droplet.worker_forward.*.name, digitalocean_droplet.worker_forward.*.ipv4_address)}"
 }

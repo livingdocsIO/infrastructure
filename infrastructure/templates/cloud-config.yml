@@ -77,8 +77,8 @@ rancher:
         - /etc/kubernetes:/etc/kubernetes
 
     digitalocean-agent:
-      image: marcbachmann/digitalocean-agent:0.5.1
+      image: digitalocean/do-agent:3
       restart: always
       net: host
-      volumes: ['/proc:/agent/proc:ro']
+      volumes: ['/proc:/agent/proc:ro', '/sys:/host/sys:ro']
       labels: ['io.rancher.os.after=network', 'io.rancher.os.scope=system']

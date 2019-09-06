@@ -49,7 +49,7 @@ resource "digitalocean_firewall" "es_ld_fra1" {
   }, {
     protocol         = "tcp"
     port_range       = "9200"
-    source_tags      = ["${digitalocean_tag.monitoring.name}", "${digitalocean_tag.prometheus.name}", "${digitalocean_tag.bastion.name}", "worker", "role_worker"]
+    source_tags      = ["${digitalocean_tag.monitoring.name}", "${digitalocean_tag.prometheus.name}", "${digitalocean_tag.bastion.name}", "${digitalocean_tag.role_worker.name}"]
   }, {
     protocol         = "tcp"
     port_range       = "9200-9400"

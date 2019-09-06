@@ -41,47 +41,23 @@ scrape_configs:
 
   - job_name: 'node'
     static_configs:
-      {% for node in groups['cluster_infrastructure'] -%}
+      {% for node in groups['all'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9100']
-        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_production'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:9100']
-        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_development'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:9100']
-        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
+        labels: {cluster: '{{ hostvars[node].cluster}}', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
   - job_name: 'coredns'
     static_configs:
-      {% for node in groups['cluster_infrastructure'] -%}
+      {% for node in groups['all'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9153']
-        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_production'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:9153']
-        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_development'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:9153']
-        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
+        labels: {cluster: '{{ hostvars[node].cluster}}', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
   - job_name: 'cadvisor'
     static_configs:
-      {% for node in groups['cluster_infrastructure'] -%}
+      {% for node in groups['all'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:8080']
-        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_production'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:8080']
-        labels: {cluster: 'production', instance: "{{ hostvars[node].hostname }}"}
-      {% endfor %}
-      {% for node in groups['cluster_development'] -%}
-      - targets: ['{{ hostvars[node].privateIP }}:8080']
-        labels: {cluster: 'development', instance: "{{ hostvars[node].hostname }}"}
+        labels: {cluster: '{{ hostvars[node].cluster}}', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
     metric_relabel_configs:
@@ -121,12 +97,12 @@ scrape_configs:
     static_configs:
       {% for node in groups['cluster_fra1_elasticsearch_logs'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9108']
-        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+        labels: {cluster: '{{ hostvars[node].cluster }}', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
 
   - job_name: 'elasticsearch_ld'
     static_configs:
-      {% for node in groups['cluster_fra1_elasticsearch_logs'] -%}
+      {% for node in groups['cluster_es_ld_fra1'] -%}
       - targets: ['{{ hostvars[node].privateIP }}:9108']
-        labels: {cluster: 'infrastructure', instance: "{{ hostvars[node].hostname }}"}
+        labels: {cluster: '{{ hostvars[node].cluster }}', instance: "{{ hostvars[node].hostname }}"}
       {% endfor %}
