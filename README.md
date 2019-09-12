@@ -57,16 +57,11 @@ terraform destroy ./infrastructure
 - [ ] Rancher (mysql)
 
 ## Urls
-Grafana, Kibana & ES cluster dashboard:
-monitoring.{{ domain }}
-monitoring.{{ domain }}/kibana/
-monitoring.{{ domain }}/elasticsearch-hq/
-
-Rancher
-hosted.{{ domain }}
-
-Prometheus
-prometheus.{{ domain }}
+- Grafana: `monitoring.{{ domain }}`
+- Kibana: `kibana.{{ domain }}`
+- Elasticsearch cluster dashboard: `elasticsearch-hq.{{ domain }}`
+- Rancher `hosted.{{ domain }}`
+- Prometheus: `prometheus.{{ domain }}`
 
 ## Elasticsearch
 Elasticsearch is used for logs
