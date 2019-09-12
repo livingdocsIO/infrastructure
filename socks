@@ -1,0 +1,2 @@
+#!/bin/bash
+TERM=xterm exec ssh rancher@$1 -F .ssh/config -D 8123 -f -C -q -N

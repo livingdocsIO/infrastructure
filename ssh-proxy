@@ -1,0 +1,4 @@
+#!/bin/bash
+HOST=$1
+shift
+TERM=xterm exec ssh -L 9221:localhost:9229 rancher@$HOST -F .ssh/config
